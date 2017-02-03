@@ -7,6 +7,12 @@ package Driver  // where "driver" is the folder that contains io.go, io.c, io.h,
 import "C"
 
 
+const (
+	n_floors = int(C.N_FLOORS)
+	n_buttons = int(C.N_BUTTONS)
+)
+
+
 type motor_direction int
 
 const (
@@ -23,6 +29,13 @@ const (
 	buttoncall_up button_type = 0
 	buttoncall_internal button_type = 2
 )
+
+
+type order_button struct {
+	Type button_type
+	Floor int
+}
+
 
 
 func set_motor_direction(dirn motor_direction){
@@ -42,15 +55,37 @@ func set_door_open(value int){
 }
 
 func get_button_signal(button button_type, floor int){
-	C.elev_get_button_signal(C.elev_button_type_t(button), C.int(floor))
+	return int(C.elev_get_button_signal(C.elev_button_type_t(button), C.int(floor)))
 }
 
 func get_floor_sensor_signal(){
-	C.elev_get_floor_sensor_signal()
+	return int(C.elev_get_floor_sensor_signal())
+}
+
+func clear_all_lamps(){
+	for floor := 0; floor < n_floors; floor++ {
+		if floor < n_floors-1 {
+			set_button_lamp(buttoncall_down, floor, 0)
+		}
+		if floor > 0 {
+			set_button_lamp(buttoncall_up, floor, 0)
+		}
+		set_button_lamp(buttoncall_internal, floor, 0)
+	}
 }
 
 
 
+
+func elev_init(){
+	C.elev_init()
+	clear_all_lamps()
+
+	set_motor_direction(dir_down)
+	for get_floor_sensor_signal() == -1 {
+	}
+	set_motor_direction(dir_stop)
+}
 
 
 
