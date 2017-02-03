@@ -5,12 +5,15 @@ import (
 
 
 func main(){
-	elev_init()
-
-	for floor := 0; floor < n_floors; floor++ {
-		for button := 0; button < n_button; button++ {
-			if get_button_signal(button, floor){
-				set_button_lamp(button, floor, 1)
+	driver.Elev_init()
+	/*for {
+		for floor := 0; floor < driver.N_floors; floor++ {
+			for button := 0; button < driver.N_buttons; button++ {
+				if driver.Get_button_signal(button, floor) {
+					driver.Set_button_lamp(button, floor, 1)
+				}
 			}
 		}
+	}*/
+	driver.Set_button_lamp(driver.Buttoncall_up, 1, 1)
 }
