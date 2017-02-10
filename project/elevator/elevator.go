@@ -2,9 +2,21 @@ import (
 	"../driver"
 )
 
-type elevator_data struct {
+type elev_states int
+
+const (
+	idle elev_states = iota
+	door_open
+	moving
+)
+
+
+type Elevator struct {
 	last_floor int
 	current_direction motor_direction
+	queue int
+	elevator_state elev_states
+	door_open_duration float
 }
 
 var elev_data elevator_data
