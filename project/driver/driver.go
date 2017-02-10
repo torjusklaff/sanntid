@@ -44,7 +44,7 @@ func Set_floor_indicator(floor int) {
 	C.elev_set_floor_indicator(C.int(floor))
 }
 
-func Get_door_open_lamp(value int) {
+func Set_door_open_lamp(value int) {
 	C.elev_set_door_open_lamp(C.int(value))
 }
 
