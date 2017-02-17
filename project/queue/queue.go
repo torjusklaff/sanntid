@@ -66,7 +66,7 @@ func Should_stop(e Elevator) int{
 	case dir_down:
 		return e.queue[e.last_floor][Buttoncall_down] || e.queue[e.floor][Buttoncall_internal] || !requests_below(e)
 	case dir_up:
-		return e.queue[e.last_floor][Buttoncall_up] || e.queue[e.floor][Buttoncall_internal] || !requests_below(e)
+		return e.queue[e.last_floor][Buttoncall_up] || e.queue[e.floor][Buttoncall_internal] || !requests_above(e)
 	case dir_stop:
 	default:
 		return 1
