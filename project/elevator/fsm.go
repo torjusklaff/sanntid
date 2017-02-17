@@ -1,15 +1,15 @@
 package fsm 
 
 import (
-	"/driver"
-	"/elevator"
-	"/queue"
+	"../driver"
+	"../elevator"
+	"../queue"
 )
 
 elevator elevator.Elevator
 
 // What is this for?
-func set_all_lights(Elevator e){
+func set_all_lights(e Elevator){
 	for floor := 0; floor < N_floors; floor++{
 		for btn := 0; btn < N_buttons; btn++{
 			driver.Set_button_lamp(btn, floor, 1)
@@ -35,10 +35,8 @@ func fsm_button_pressed(btn_floor int, btn_type Button_type){
 			elevator.queue[btn_floor][btn_type] = 1
 		}
 		break
-
 	case moving:
 		elevator.queue[btn][btn_type] = 1
-
 	case idle:
 	
 	}
@@ -47,15 +45,15 @@ func fsm_button_pressed(btn_floor int, btn_type Button_type){
 
 
 func FSM_floor_arrival(new_floor int){
-	elevator.last_floor = new_floor
+	Elevator.last_floor = new_floor
 	driver.Set_floor_indicator(new_floor)
 
 	switch(elevator.elevator_state){
 	case moving:
-		if(queue.should_stop(elevator)){
+		if(queue.Should_stop(elevator)){
 			driver.Set_motor_direction(dir_stop)
 			driver.Set_door_open_lamp(1)
-			queue.clear_at_current_floor(elevator)
+			queue.Clear_at_current_floor(elevator)
 			timer_start(elevator.door_open_duration)
 			//set_all_lights(elevator)  			// why?
 			elevator.elevator_state = door_open
@@ -87,6 +85,7 @@ func FSM_on_door_timeout(){
 		break
 	}
 }
+
 
 
 
