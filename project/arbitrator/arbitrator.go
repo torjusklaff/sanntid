@@ -8,6 +8,17 @@ import (
 
 max_distance = driver.N_floors * driver.N_buttons
 
+func Arbitrate(IP_adresses *type here, want an array*, costs int) IP {
+	var lowest_cost = inf
+	var to_elevator IP;
+	for (i=0; i<len(costs); i++){
+		if costs[i] < lowest_cost {
+			lowest_cost = costs[i]
+			to_elevator = IP_adresses[i]
+		}
+	}
+}
+
 func Cost_function(elevator Elevator, order Order_button) cost int{
 	var difference = order.Floor - elevator.last_floor
 	var cost = math.Abs(difference) 
