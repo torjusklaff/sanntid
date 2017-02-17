@@ -38,13 +38,13 @@ func read_backup(length int){
 
 func read_full_backup(){
 	file, err := os.Open("backup.txt")
-    check_error(err)
-
-    data, err := ioutil.ReadAll(file)
-    check_error(err)
-
-    file.Close()
-    return data
+	check_error(err)
+	
+	data, err := ioutil.ReadAll(file)
+	check_error(err)
+	
+	file.Close()
+	return data
 }
 
 
