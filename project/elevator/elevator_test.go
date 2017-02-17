@@ -29,7 +29,7 @@ func Get_elev_data(){
 	return elev_data
 }
 
-func Get_elev_data(floor last_floor, direction motor_direction){
+func Set_elev_data(floor last_floor, direction motor_direction){
 	elev_data{last_floor: floor}
 	elev_data{motor_direction: direction}
 }
