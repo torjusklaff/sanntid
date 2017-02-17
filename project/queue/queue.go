@@ -5,7 +5,7 @@ import (
 	"/elevator"
 )
 
-func requests_above(Elevator e) int {
+func requests_above(e Elevator) int {
 	for int f := e.last_floor+1; f < N_floors; f++ {
 		for btn := 0; btn < N_buttons; btn++ {
 			if e.queue[f][btn] {
@@ -16,7 +16,7 @@ func requests_above(Elevator e) int {
 	return 0
 }
 
-func requests_below(Elevator e) int {
+func requests_below(e Elevator) int {
 	for int f := 0; f < e.last_floor; f++ {
 		for btn := 0; btn < N_buttons; btn++ {
 			if e.queue[f][btn] {
@@ -27,7 +27,7 @@ func requests_below(Elevator e) int {
 	return 0
 }
 
-func Choose_direction(Elevator e) motor_direction {
+func Choose_direction(e Elevator) motor_direction {
 	switch(e.current_direction){
 	case dir_up:
 		if requests_above(e){
@@ -55,13 +55,13 @@ func Choose_direction(Elevator e) motor_direction {
 	}
 }
 
-func Clear_at_current_floor(Elevator e){
+func Clear_at_current_floor(e Elevator){
 	for btn Button_type := 0; btn < N_buttons; btn++{
 		e.queue[e.last_floor][btn] = 0;
 	}
 }
 
-func Should_stop(Elevator e) int{
+func Should_stop(e Elevator) int{
 	switch(e.current_direction){
 	case dir_down:
 		return e.queue[e.last_floor][Buttoncall_down] || e.queue[e.floor][Buttoncall_internal] || !requests_below(e)
@@ -73,7 +73,9 @@ func Should_stop(Elevator e) int{
 	}
 }
 
-
+func Enqueue(e Elevator, order Order_button){
+	e.queue[order.Floor][order.Type] = 1;
+}
 
 
 
