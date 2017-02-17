@@ -14,7 +14,7 @@ const (
 type Elevator struct {
 	last_floor int
 	current_direction motor_direction
-	queue int
+	queue [driver.N_floors]int
 	elevator_state elev_states
 	door_open_duration float
 }
