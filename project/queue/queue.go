@@ -5,7 +5,7 @@ import (
 	"/elevator"
 )
 
-func Requests_above(Elevator e) int {
+func requests_above(Elevator e) int {
 	for int f := e.last_floor+1; f < N_floors; f++ {
 		for btn := 0; btn < N_buttons; btn++ {
 			if e.queue[f][btn] {
@@ -16,7 +16,7 @@ func Requests_above(Elevator e) int {
 	return 0
 }
 
-func Requests_below(Elevator e) int {
+func requests_below(Elevator e) int {
 	for int f := 0; f < e.last_floor; f++ {
 		for btn := 0; btn < N_buttons; btn++ {
 			if e.queue[f][btn] {
