@@ -8,7 +8,7 @@ import (
 
 max_distance = driver.N_floors * driver.N_buttons
 
-func Arbitrate(IP_adresses *type here, want an array*, costs int) IP {
+func Find_lowest_cost(IP_adresses *type here, want an array*, costs int) IP {
 	var lowest_cost = inf
 	var to_elevator IP;
 	for (i=0; i<len(costs); i++){
