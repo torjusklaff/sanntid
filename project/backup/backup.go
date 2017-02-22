@@ -24,6 +24,7 @@ func new_backup_file(){
 func read_backup(length int){
 	file, err := os.Open("backup.txt")
 	check_error(err)
+	defer file.Close()
 
 	byte_slice := make([]byte, length)
 	bytes_read, err := io.ReadFull(file, byte_slice)
@@ -31,7 +32,6 @@ func read_backup(length int){
 		log.Fatal(err)
 	}
 
-	file.Close()
 	return bytes_read
 }
 
