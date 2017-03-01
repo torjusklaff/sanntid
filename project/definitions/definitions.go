@@ -25,3 +25,19 @@ type Order_button struct {
 	Type  Button_type
 	Floor int
 }
+
+type Elev_states int
+
+const (
+	idle Elev_states = iota
+	door_open
+	moving
+)
+
+type Elevator struct {
+	last_floor         int
+	current_direction  Motor_direction
+	queue              [N_floors]int
+	elevator_state     Elev_states
+	door_open_duration float64
+}

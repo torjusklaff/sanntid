@@ -22,12 +22,12 @@ type Message struct {
 var NullState State = State{0}
 
 func ListenForMessages(incoming_message chan Message) {
-	local, err := net.ResolveUDPAddr("udp", ":33445") // Change to 127.0.0.1 to work on laptop
+	id, err := net.ResolveUDPAddr("udp", ":33445") // Change to 127.0.0.1 to work on laptop
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	conn, err := net.ListenUDP("udp", local)
+	conn, err := net.ListenUDP("udp", id)
 	if err != nil {
 		log.Fatal(err)
 	}

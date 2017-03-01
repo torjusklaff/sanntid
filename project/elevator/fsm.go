@@ -68,7 +68,7 @@ func FSM_floor_arrival(new_floor int){
 func FSM_on_door_timeout(){
 	switch(elevator.elevator_state){
 	case door_open:
-		elevator.current_direction = queue.choose_direction(elevator)
+		elevator.current_direction = queue.Choose_direction(elevator)
 
 		driver.Set_door_open_lamp(0)
 		driver.Set_motor_direction(elevator.current_direction)
@@ -85,7 +85,3 @@ func FSM_on_door_timeout(){
 		break
 	}
 }
-
-
-
-

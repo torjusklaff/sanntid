@@ -23,7 +23,7 @@ type Message struct {
 var NullState State = State{0}
 
 func SendMessages(outgoing_message chan Message) {
-	local, err := net.ResolveUDPAddr("udp", ":44556") // Change to 127.0.0.1 to work on laptop
+	id, err := net.ResolveUDPAddr("udp", "129.241.187.154") // :44556
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func SendMessages(outgoing_message chan Message) {
 		log.Fatal(err)
 	}
 
-	conn, err := net.ListenUDP("udp", local)
+	conn, err := net.ListenUDP("udp", id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,9 +57,15 @@ func Log(str string) {
 
 func LaunchBackupProcess() {
 	cmd := exec.Command("gnome-terminal", "-x", "sh", "-c", "go run backup.go")
+
+	fmt.Printf("Command-start of backup done \n")
+
 	err := cmd.Run()
 
+	fmt.Printf("Command-run done \n")
+
 	if err != nil {
+		fmt.Printf("Error in running command line \n")
 		log.Fatal(err)
 	}
 }
@@ -73,11 +79,14 @@ func main() {
 	defer f.Close()
 	log.SetOutput(f)
 
+	fmt.Printf("File opening successfull\n")
+
 	// Set up com channel with backup
 	outgoing_message := make(chan Message)
 	go SendMessages(outgoing_message)
 
 	LaunchBackupProcess()
+	fmt.Printf("Launched backup prosess \n")
 
 	// Launch master process
 	Log("Launching master process")
@@ -92,18 +101,18 @@ func main() {
 	}
 
 	for {
-		Log("MASTER preparing work")
+		Log("MASTER starting work")
 		time.Sleep(1 * time.Second)
 		state.Tick++
 
-		Log("MASTER finished work")
+		Log("MASTER updated")
 		time.Sleep(1 * time.Second)
 		outgoing_message <- Message{state}
 
-		Log("MASTER sent state to backup")
+		Log("MASTER sent state to BACKUP")
 		time.Sleep(1 * time.Second)
 
-		Log(fmt.Sprintf("MASTER PRINT %d", state.Tick))
+		Log(fmt.Sprintf("MASTER PRINT STATE %d", state.Tick))
 		Log("")
 		time.Sleep(1 * time.Second)
 	}
