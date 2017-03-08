@@ -1,7 +1,7 @@
 
 Arbitrator:
 - Find_lowest_cost(IP_adresses, costs) : returnerer ip-adressen til den heisen som har lavest cost
-- Cost_function(elevator, order): regner ut og returnerer costen til gitt heis
+- Cost_function(elevator, Order_button): regner ut og returnerer costen til gitt heis
 Husk: endre typer på argumentene til funksjonene (spesielt sjekk IP-type)
 
 Backup: (backup_2)
@@ -24,6 +24,7 @@ Driver:
 State machine (fsm):
 - FSM_floor_arrival(new_floor): sjekker om den skal stoppe, setter etasje-lys
 - FSM_on_door_timeout(): finner neste direction og setter state
+- FSM_button_pressed(Order_button, elevator): setter lys på knapp og returnerer cost regner ut av arbitrator
 
 Network:
 - bcast.Transmitter(port int, chans ...interface{}): Broadcaster data sendt til channel på gitt port
