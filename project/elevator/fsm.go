@@ -8,35 +8,7 @@ import (
 
 elevator elevator.Elevator
 
-// What is this for?
-func set_all_lights(e Elevator){
-	for floor := 0; floor < N_floors; floor++{
-		for btn := 0; btn < N_buttons; btn++{
-			driver.Set_button_lamp(btn, floor, 1)
-		}
-	}
-}
 
-
-
-/*
-func fsm_button_pressed(btn_floor int, btn_type Button_type){
-	switch(elevator.elevator_state){
-	case door_open:
-		if(elevator.last_floor == btn_floor){
-			timer_start(elevator.door_open_duration)
-		}
-		else {
-			elevator.queue[btn_floor][btn_type] = 1
-		}
-		break
-	case moving:
-		elevator.queue[btn][btn_type] = 1
-	case idle:
-	
-	}
-}
-*/ //in arbitrator
 
 
 func FSM_floor_arrival(new_floor int){
@@ -50,7 +22,6 @@ func FSM_floor_arrival(new_floor int){
 			driver.Set_door_open_lamp(1)
 			queue.Clear_at_current_floor(elevator)
 			timer_start(elevator.door_open_duration)
-			//set_all_lights(elevator)  			// why?
 			elevator.elevator_state = door_open
 		}
 		break
