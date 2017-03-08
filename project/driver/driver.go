@@ -33,7 +33,7 @@ func Get_floor_sensor_signal() int {
 	return int(C.elev_get_floor_sensor_signal())
 }
 
-func Clear_all_lamps() {
+func clear_all_lamps() {
 	for floor := 0; floor < N_floors; floor++ {
 		if floor < N_floors-1 {
 			Set_button_lamp(def.Buttoncall_down, floor, 0)
@@ -47,7 +47,7 @@ func Clear_all_lamps() {
 
 func Elev_init() {
 	C.elev_init()
-	Clear_all_lamps()
+	clear_all_lamps()
 
 	Set_motor_direction(def.Dir_down)
 	for Get_floor_sensor_signal() == -1 {
