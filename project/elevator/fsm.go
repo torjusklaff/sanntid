@@ -1,18 +1,20 @@
 package fsm 
 
 import (
-	"../driver"
-	"../elevator"
-	"../queue"
+	"/driver"
+	def "/definitions"
+	"/queue"
+	arb "/arbitrator"
 )
 
-elevator elevator.Elevator
+func FSM_button_pressed(button def.Order_button, elevator def.Elevator) arbitrator_cost int{
+	driver.Set_button_lamp(button.Type, button.Floor, 1)
+	arbitrator_cost = arb.Cost_function(elevator, button)
+}
 
 
-
-
-func FSM_floor_arrival(new_floor int){
-	Elevator.last_floor = new_floor
+func FSM_floor_arrival(new_floor int, elevator def.Elevator){
+	elevator.last_floor = new_floor
 	driver.Set_floor_indicator(new_floor)
 
 	switch(elevator.elevator_state){
@@ -31,7 +33,7 @@ func FSM_floor_arrival(new_floor int){
 }
 
 
-func FSM_on_door_timeout(){
+func FSM_on_door_timeout(elevator def.Elevator){
 	switch(elevator.elevator_state){
 	case door_open:
 		elevator.current_direction = queue.Choose_direction(elevator)

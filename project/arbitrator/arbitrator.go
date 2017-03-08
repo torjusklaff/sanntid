@@ -2,11 +2,10 @@ package arbitrator
 
 import (
 	"math"
-	"/driver"	// path to Order_button
-	"/elevator" // path to Elevator-struct
+	def "/definitions"
 )
 
-max_distance = driver.N_floors * driver.N_buttons
+max_distance = def.N_floors * def.N_buttons
 
 func Find_lowest_cost(IP_adresses string[], costs int[]) IP {
 	var lowest_cost = inf
@@ -19,7 +18,7 @@ func Find_lowest_cost(IP_adresses string[], costs int[]) IP {
 	}
 }
 
-func Cost_function(elevator Elevator, order Order_button) cost int{
+func Cost_function(elevator def.Elevator, order def.Order_button) cost int{
 	var difference = order.Floor - elevator.last_floor
 	var cost = math.Abs(difference) 
 	+ movement_penalty(elevator.state, elevator.current_direction, difference) 
@@ -28,7 +27,7 @@ func Cost_function(elevator Elevator, order Order_button) cost int{
 }
 
 
-func movement_penalty(state, direction, difference) penalty int{
+func movement_penalty(state def.Elev_states, direction def.Motor_direction, difference int) penalty int{
 	switch(state){
 	case idle:
 		penalty = 0
@@ -50,7 +49,7 @@ func movement_penalty(state, direction, difference) penalty int{
 	}
 }
 
-func turn_penalty(state, elevator_floor, elevator_direction, order_floor) penalty int{
+func turn_penalty(state def.Elev_states, elevator_floor int, elevator_direction def.Motor_direction, order_floor int) penalty int{
 	if((state == idle)&&((elevator_floor == 1)||(elevator_floor == driver.N_floors)))
 	||((state == moving)&&((first)||(second)))
 	{
@@ -64,7 +63,7 @@ func turn_penalty(state, elevator_floor, elevator_direction, order_floor) penalt
 }
 
 
-func order_direction_penalty(elevator_direction, order_floor, order_direction) penalty int{
+func order_direction_penalty(elevator_direction def.Motor_direction, order_floor int, order_direction def.Motor_direction) penalty int{
 	if (order_floor == 1 || order_floor == driver.N_floors){
 		penalty = 0
 	} else if (elevator_direction != order_direction){
