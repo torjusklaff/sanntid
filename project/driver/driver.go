@@ -45,7 +45,7 @@ func clear_all_lamps() {
 	}
 }
 
-func Elev_init() {
+func Elev_init() def.Elevator elev{
 	C.elev_init()
 	clear_all_lamps()
 
@@ -53,4 +53,17 @@ func Elev_init() {
 	for Get_floor_sensor_signal() == -1 {
 	}
 	Set_motor_direction(def.Dir_stop)
+
+	// Initializing an elevator-object 
+	var elev def.Elevator
+	elev.current_direction = def.Dir_stop
+	elev.queue = [N_floors]int
+	for floor := 0; floor < N_floors; floor++ {
+		elev.queue[floor] = [N_buttons]int
+		for buttons := 0; buttons < N_buttons; buttons++{
+			elev.queue[floor][button] = 0
+		}
+	}
+	elev.elevator_state = def.idle
+	elev.door_open_duration = 5
 }

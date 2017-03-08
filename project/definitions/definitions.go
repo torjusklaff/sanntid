@@ -40,4 +40,9 @@ type Elevator struct {
 	queue              [N_floors]int
 	elevator_state     Elev_states
 	door_open_duration float64
+	id 					string
+}
+
+type Network_message struct {
+	queue		[N_floors]int
 }

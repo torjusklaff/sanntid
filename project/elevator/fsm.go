@@ -1,46 +1,20 @@
 package fsm 
 
 import (
-	"../driver"
-	"../elevator"
-	"../queue"
+	"/driver"
+	def "/definitions"
+	"/queue"
+	arb "/arbitrator"
 )
 
-elevator elevator.Elevator
-
-// What is this for?
-func set_all_lights(e Elevator){
-	for floor := 0; floor < N_floors; floor++{
-		for btn := 0; btn < N_buttons; btn++{
-			driver.Set_button_lamp(btn, floor, 1)
-		}
-	}
+func FSM_button_pressed(button def.Order_button, elevator def.Elevator) arbitrator_cost int{
+	driver.Set_button_lamp(button.Type, button.Floor, 1)
+	arbitrator_cost = arb.Cost_function(elevator, button)
 }
 
 
-
-/*
-func fsm_button_pressed(btn_floor int, btn_type Button_type){
-	switch(elevator.elevator_state){
-	case door_open:
-		if(elevator.last_floor == btn_floor){
-			timer_start(elevator.door_open_duration)
-		}
-		else {
-			elevator.queue[btn_floor][btn_type] = 1
-		}
-		break
-	case moving:
-		elevator.queue[btn][btn_type] = 1
-	case idle:
-	
-	}
-}
-*/ //in arbitrator
-
-
-func FSM_floor_arrival(new_floor int){
-	Elevator.last_floor = new_floor
+func FSM_floor_arrival(new_floor int, elevator def.Elevator){
+	elevator.last_floor = new_floor
 	driver.Set_floor_indicator(new_floor)
 
 	switch(elevator.elevator_state){
@@ -50,7 +24,6 @@ func FSM_floor_arrival(new_floor int){
 			driver.Set_door_open_lamp(1)
 			queue.Clear_at_current_floor(elevator)
 			timer_start(elevator.door_open_duration)
-			//set_all_lights(elevator)  			// why?
 			elevator.elevator_state = door_open
 		}
 		break
@@ -60,7 +33,7 @@ func FSM_floor_arrival(new_floor int){
 }
 
 
-func FSM_on_door_timeout(){
+func FSM_on_door_timeout(elevator def.Elevator){
 	switch(elevator.elevator_state){
 	case door_open:
 		elevator.current_direction = queue.Choose_direction(elevator)
