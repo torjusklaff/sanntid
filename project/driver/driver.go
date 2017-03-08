@@ -29,12 +29,26 @@ func Get_button_signal(button def.Button_type, floor int) int {
 	return int(C.elev_get_button_signal(C.elev_button_type_t(button), C.int(floor)))
 }
 
+func Check_all_buttons(button_pressed chan def.Order_button){
+	var pressed_button def.Order_button
+	for floor := 1; floor < def.N_floors+1; floor++{
+		for button := 0; button < def.N_buttons; button++{
+			if Get_button_signal(button, floor) == 1{
+				pressed_button.Type = def.Button_type(button)
+				pressed_button.Floor = floor
+				
+				button_pressed <- pressed_button
+			}
+		}
+	}
+}
+
 func Get_floor_sensor_signal() int {
 	return int(C.elev_get_floor_sensor_signal())
 }
 
 func clear_all_lamps() {
-	for floor := 0; floor < N_floors; floor++ {
+	for floor := 1; floor < N_floors+1; floor++ {
 		if floor < N_floors-1 {
 			Set_button_lamp(def.Buttoncall_down, floor, 0)
 		}

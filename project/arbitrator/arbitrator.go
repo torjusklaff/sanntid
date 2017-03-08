@@ -7,7 +7,7 @@ import (
 
 max_distance = def.N_floors * def.N_buttons
 
-func Find_lowest_cost(IP_adresses string[], costs int[]) IP {
+func Find_lowest_cost(IP_adresses string[], costs float32[]) IP {
 	var lowest_cost = inf
 	var to_elevator IP;
 	for (i=0; i<len(costs); i++){
@@ -18,7 +18,7 @@ func Find_lowest_cost(IP_adresses string[], costs int[]) IP {
 	}
 }
 
-func Cost_function(elevator def.Elevator, order def.Order_button) cost int{
+func Cost_function(elevator def.Elevator, order def.Order_button) cost float32{
 	var difference = order.Floor - elevator.last_floor
 	var cost = math.Abs(difference) 
 	+ movement_penalty(elevator.state, elevator.current_direction, difference) 
