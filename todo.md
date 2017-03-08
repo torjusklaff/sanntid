@@ -1,4 +1,5 @@
-Til søndag:
+Todo
 
-- Lage et test-program for å kjøre kommandoer over ssh til en annen pc på sal
+- Initialisere fra backup-fil
+- Handle package loss
 - 
