@@ -33,6 +33,6 @@ func Read_last_line() line string {
 	buf := make([]byte, string_size)
 	stat, err := os.Stat(filename)
 	start := stat.Size() - string_size
-	_, err = f.ReadAt(buf, start)
+	line, err = f.ReadAt(buf, start)
 	check_error(err)
 }

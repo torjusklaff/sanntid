@@ -46,3 +46,8 @@ type Elevator struct {
 type Network_message struct {
 	queue		[N_floors]int
 }
+
+type cost_message struct {
+	cost float32
+	id string
+}
