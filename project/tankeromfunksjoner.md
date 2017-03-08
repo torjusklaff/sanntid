@@ -19,7 +19,7 @@ Driver:
 - Set_door_open_lamp()
 - Get_button_signal()
 - Get_floor_sensor_signal()
-- Elev_init(): skrur av alle lamper, kjører heisen ned til nærmeste etasje og setter state stop
+- Elev_init(): skrur av alle lamper, kjører heisen ned til nærmeste etasje, lager et Elevator-objekt og setter standard verdier på alle struct-elementene
 
 State machine (fsm):
 - FSM_floor_arrival(new_floor): sjekker om den skal stoppe, setter etasje-lys
