@@ -26,12 +26,12 @@ State machine (fsm):
 - FSM_on_door_timeout(): finner neste direction og setter state
 
 Network:
-- bcast.Transmitter(port, channel): 
-- bcast.Receiver(port, channel): 
-- conn.DialBroadcastUDP(port):
-- localip.LocalIP(): 
-- peers.Transmitter(port, id, bool): 
-- peers.Receiver(port, channel): 
+- bcast.Transmitter(port int, chans ...interface{}): Broadcaster data sendt til channel på gitt port
+- bcast.Receiver(port, channel): Deserializer data mottatt på gitt port, og broadcaster det på channelen
+- peers.Transmitter(port, id, bool): Finner peers på lokalt nettverk
+- peers.Receiver(port, channel): Får inn peers updates (new, current, lost peers)
+- localip.LocalIP(): finner egen IP-adresse og returnerer den
+- conn.DialBroadcastUDP(port): brukes bare i de andre funksjonene
 
 Queue:
 - Choose_direction(elevator): returnerer hvilken vei heisen skal gå med hensyn til kø, nåværende etasje og nåværende retning
