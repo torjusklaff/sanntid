@@ -18,11 +18,6 @@ func set_all_lights(e Elevator){
 }
 
 
-func FSM_init_between_floors(){
-	driver.Set_motor_direction(dir_down)
-	elevator.current_direction = dir_down
-	elevator.elevator_state = moving
-}
 
 /*
 func fsm_button_pressed(btn_floor int, btn_type Button_type){
