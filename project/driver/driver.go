@@ -65,7 +65,7 @@ func Door_open(){
 	Set_door_open_lamp(0)
 }
 
-func clear_all_lamps() { 				// necessary function ??
+/*func clear_all_lamps() { 				// necessary function ??
 	var buttons def.Order_button
 	for floor := 0; floor < def.N_floors; floor++ {
 		buttons.Floor = floor
@@ -80,7 +80,7 @@ func clear_all_lamps() { 				// necessary function ??
 		buttons.Type = def.Buttoncall_internal
 		Set_button_lamp(buttons, 0)
 	}
-}
+}*/
 
 func Elev_init() def.Elevator{
 	C.elev_init()

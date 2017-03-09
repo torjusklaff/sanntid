@@ -45,7 +45,8 @@ type Elevator struct {
 }
 
 type Network_message struct {
-	queue		[N_floors]int
+	message 			string
+	//queue				[N_floors][N_buttons]int
 }
 
 type cost_message struct {

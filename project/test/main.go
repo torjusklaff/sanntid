@@ -17,7 +17,6 @@ func main(){
 	// Åpne ny backup-fil
 	// If file not found: lag ny fil, initialisering
 
-	/*
 	elevator := driver.Elev_init()
 	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
 
@@ -45,22 +44,15 @@ func main(){
 		}
 		//fmt.Printf("End of for-loop\n")
 	}
-	*/
 	
 
 	
 
-	elevator := driver.Elev_init()
-	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
 
+/*	
 	// Getting localIP
-	localIP, err := localip.LocalIP()
-	if err != nil{
-		fmt.Printf(err)
-		localIP = "DISCONNECTED"
-	}
-	id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
-	
+	id := localip.LocalIP()
+	elevator.id = id
 
 	// Channels for updating alive peers on network
 	peerUpdateCh := make(chan peers.PeerUpdate)
@@ -71,16 +63,16 @@ func main(){
 
 
 	// We make channels for sending and receiving our custom data types
-	message_transmit := make(chan def.Network_message)
+message_transmit := make(chan def.Network_message)
 	message_receive := make(chan def.Network_message)
 	go bcast.Transmitter(16569, message_transmit)
 	go bcast.Receiver(16569, message_receive)
 
-	/*cost_transmit := make(chan def.cost_message)
+	cost_transmit := make(chan def.cost_message)
 	cost_receive := make(chan def.cost_message)
 	go bcast.Transmitter(16570, cost_transmit)
 	go bcast.Receiver(16570, cost_receive)
-	*/
+
 	new_order_transmit := make(chan def.Order_button) 		// sjekke om vi trenger buffer
 	new_order_receive := make(chan def.Order_button)		// sjekke om vi trenger buffer
 	go bcast.Transmitter(16571, new_order_transmit)
@@ -92,28 +84,59 @@ func main(){
 
 
 
+	
 	go func(){
-		counting := 0
-		msg := def.Network_message{"Helloo"}
-		for {
-			message_transmit <- msg
-			counting += 1
-			time.Sleep(3*time.Second)
+		// bestilling på denne heisen
+		if button def.Order_button := <- button_pressed{
+			new_order_transmit <- button
+			cost = fsm.FSM_button_pressed(button, elevator)
+
+			var cost_msg def.Cost_message
+			cost_msg.cost = cost
+			cost_msg.id = elevator.id
+
+			cost_transmit <- cost_msg
 		}
-	}()
+		// bestilling på annen heis
+		if new_order := <- new_order_receive{
+			cost = fsm.FSM_button_pressed(button, elevator)
+
+			var cost_msg def.Cost_message
+			cost_msg.cost = cost
+			cost_msg.id = elevator.id
+
+			cost_transmit <- cost_msg
+		}
+	}
+
+
+	go func() {
+		costs_for_elevators = make(map[string]float32)
+		if received_cost := <- cost_receive{
+			elem, ok = costs_for_elevators[received_cost.id]
+			if not ok{
+				costs_for_elevators[received_cost.id] = received_cost.cost
+			}
+		}
+
+	}
+
+
+
+
+
 
 	for {
 		select {
-		case p := <-peerUpdateCh:
-			fmt.Printf("Peer update:\n")
-			fmt.Printf("  Peers:    %q\n", p.Peers)
-			fmt.Printf("  New:      %q\n", p.New)
-			fmt.Printf("  Lost:     %q\n", p.Lost)
+		case msg := <- message_receive:
+			//det som skjer dersom vi har kontakt med omverdenen
+		case <-time.After(5*time.Second):
+			// det som skjer dersom vi ikke får noe inn på receive-channelen
 
-		case a := <-helloRx:
-			fmt.Printf("Received: %#v\n", a)
-		}
+
 	}
+*/
+
 
 
 }
