@@ -84,12 +84,12 @@ func FSM_on_door_timeout(elevator *def.Elevator){
 }
 
 
-
-func Button_listener(button_press chan def.Order_button){
+// Prøvde å lage en ny funksjon som kun kunne sjekke knapper hele tiden
+func Button_listener(button_press chan<- def.Order_button){
 	possible_buttons := [][]int{{0,0,0},{0,0,0},{0,0,0},{0,0,0}}
 	for {
 		for floor := 0; floor < def.N_floors; floor++{
-			for btn := def.Buttoncall_down; int(btn)<def.N_buttons; btw++{
+			for btn := def.Buttoncall_down; int(btn)<def.N_buttons; btn++{
 				if(floor == 0 && btn == def.Buttoncall_down){
 					continue
 				}
@@ -104,7 +104,7 @@ func Button_listener(button_press chan def.Order_button){
 
 				if button_signal == 1 && (possible_buttons[floor][btn] == 0) {
 					button_press <- def.Order_button{Type: btn, Floor: floor}
-					possible_buttons[floor][button] = GetButtonSignal(button, floor)
+					possible_buttons[floor][btn] = driver.Get_button_signal(button)
 					driver.Set_button_lamp(button, 1)
 				}
 			}
@@ -112,7 +112,8 @@ func Button_listener(button_press chan def.Order_button){
 	}
 }
 
-func Floor_listener(floor_pass chan int){
+// Prøvde å hele tiden sjekke etter floor-signaler
+func Floor_listener(floor_pass chan<- int){
 	last_floor := -1
 	var floor_signal int
 	for {

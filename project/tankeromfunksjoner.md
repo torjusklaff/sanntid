@@ -1,7 +1,10 @@
 
 Arbitrator:
-- Find_lowest_cost(IP_adresses, costs) : returnerer ip-adressen til den heisen som har lavest cost
-- Cost_function(elevator, Order_button): regner ut og returnerer costen til gitt heis
+- find_lowest_cost(IP_adresses, costs) : returnerer ip-adressen til den heisen som har lavest cost
+- cost_function(elevator, Order_button): regner ut og returnerer costen til gitt heis
+- Arbitrator_init(): initialiserer arbitratoren sånn at den kan gi ut orders hele tiden
+- order_selection(): Bestemmer om current heis skal ta bestillingen eller ikke, sender da på assigned_new_order
+- 
 Husk: endre typer på argumentene til funksjonene (spesielt sjekk IP-type)
 
 Backup: (backup_2)
@@ -25,6 +28,10 @@ State machine (fsm):
 - FSM_floor_arrival(new_floor): sjekker om den skal stoppe, setter etasje-lys
 - FSM_on_door_timeout(): finner neste direction og setter state
 - FSM_button_pressed(Order_button, elevator): setter lys på knapp og returnerer cost regner ut av arbitrator
+- FSM_on_door_timeout(): kjører heisen videre(eller evnt ikke) etter at den er ferdig i en etasje
+- Button_listener(): for-løkke for å sjekke etter knappetrykk
+- Floor_listener(): for-løkke for å se etter floor-sensor-signal
+
 
 Network:
 - bcast.Transmitter(port int, chans ...interface{}): Broadcaster data sendt til channel på gitt port
@@ -33,6 +40,14 @@ Network:
 - peers.Receiver(port, channel): Får inn peers updates (new, current, lost peers)
 - localip.LocalIP(): finner egen IP-adresse og returnerer den
 - conn.DialBroadcastUDP(port): brukes bare i de andre funksjonene
+- Network_init(): starter opp go-routines for alle nettverksfunksjoner
+- Get_id(): returnerer IP-adressen til den heisen den kjører på
+- Peer_listener(): initialiserer alle peers-funksjonene
+- Send_msg(): starter channels for å sende ting over broadcast
+- Receive_msg(): starter channels for å motta ting over broadcast
+- 
+
+
 
 Queue:
 - Choose_direction(elevator): returnerer hvilken vei heisen skal gå med hensyn til kø, nåværende etasje og nåværende retning

@@ -35,7 +35,7 @@ func find_lowest_cost(costs [def.N_elevators]def.Cost) def.Cost {
 	return list[0]
 }
 
-
+// initialiserer arbitratoren sånn at den kan gi ut orders hele tiden
 func Arbitrator_init(
 	e def.Elevator,
 	localIP string, 
@@ -99,9 +99,7 @@ func order_selection(
 
 
 
-
-
-
+//hjelpefunksjon
 func split_IP(IP string) string {
 	s := strings.Split(IP, ".")
 	return s[3]
