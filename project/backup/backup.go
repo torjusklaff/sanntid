@@ -1,60 +1,39 @@
+package backup
+
 import (
-	"io"
 	"log"
 	"os"
 )
 
-// help function, checks errors
+const filename = "log.txt"
+const string_size = 62 		// Leser fra og med size minus string_size (aka siste linje)
+
 func check_error(err error){
 	if err != nil {
-        log.Fatal(err)
+        log.Fatalf("error opening file: %v", err)
     }
 }
 
-// creates backup.txt if it doesnt exist
-func new_backup_file(){
-	if _, err := os.Stat("backup.txt"); os.IsNotExist(err) {
-		newFile, err = os.Create("backup.txt")
-		check_error(err)
-		log.Println(newFile)
-		newFile.Close()
-	}
+
+func To_backup(str string) {
+	f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	check_error(err)
+	defer f.Close()
+
+	log.SetOutput(f)
+	log.Println(str)
 }
 
-func read_backup(length int){
-	file, err := os.Open("backup.txt")
+/*
+func Read_last_line() string {
+	f, err := os.Open(filename)
 	check_error(err)
-	defer file.Close()
+	defer f.Close()
 
-	byte_slice := make([]byte, length)
-	bytes_read, err := io.ReadFull(file, byte_slice)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return bytes_read
+	buf := make([]byte, string_size)
+	stat, err := os.Stat(filename)
+	start := stat.Size() - string_size
+	_, err = f.ReadAt(buf, start)
+	check_error(err)
 }
-
-
-func read_full_backup(){
-	file, err := os.Open("backup.txt")
-	check_error(err)
-	
-	data, err := ioutil.ReadAll(file)
-	check_error(err)
-	
-	file.Close()
-	return data
-}
-
-
-func write_to_backup(to_file string) {
-	file, err := os.OpenFile("backup.txt", os.O_RDWR|os.O_APPEND, 0660)
-	check_error(err)
-	defer file.Close()
-
-	byte_slice := []byte(to_file)
-	bytes_written, err := file.Write(byte_slice)
-	check_error(err)
-	file.Close()
-}
+*/

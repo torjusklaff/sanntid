@@ -1,8 +1,10 @@
 package definitions
 
+
+
 const (
-	N_floors  = int(C.N_FLOORS)
-	N_buttons = int(C.N_BUTTONS)
+	N_floors  = 4
+	N_buttons = 3
 )
 
 type Motor_direction int
@@ -29,18 +31,17 @@ type Order_button struct {
 type Elev_states int
 
 const (
-	idle Elev_states = iota
-	door_open
-	moving
+	Idle Elev_states = iota
+	Door_open                  //Not really necessary, look into it (Change to On_floor)
+	Moving
 )
 
 type Elevator struct {
-	last_floor         int
-	current_direction  Motor_direction
-	queue              [N_floors]int
-	elevator_state     Elev_states
-	door_open_duration float64
-	id 					string
+	Last_floor         int
+	Current_direction  Motor_direction
+	Queue              [N_floors][N_buttons]int
+	Elevator_state     Elev_states
+	Id 					string
 }
 
 type Network_message struct {
