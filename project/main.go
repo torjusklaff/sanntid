@@ -17,7 +17,7 @@ func main(){
 	// Åpne ny backup-fil
 	// If file not found: lag ny fil, initialisering
 
-	/*
+	
 	elevator := driver.Elev_init()
 	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
 
@@ -29,8 +29,8 @@ func main(){
 
 
 	for {
-		go driver.Elevator_on_floor(on_floor, elevator)
-		go driver.Check_all_buttons(button_pressed)
+		go fsm.Floor_listener(on_floor)
+		go fsm.Button_listener(button_pressed)
 		
 		select{
 			case button_is_actually_pressed := <- button_pressed:
@@ -45,11 +45,11 @@ func main(){
 		}
 		//fmt.Printf("End of for-loop\n")
 	}
-	*/
+	
 	
 
 	
-
+/*
 	elevator := driver.Elev_init()
 	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
 
@@ -80,7 +80,7 @@ func main(){
 	cost_receive := make(chan def.cost_message)
 	go bcast.Transmitter(16570, cost_transmit)
 	go bcast.Receiver(16570, cost_receive)
-	*/
+	
 	new_order_transmit := make(chan def.Order_button) 		// sjekke om vi trenger buffer
 	new_order_receive := make(chan def.Order_button)		// sjekke om vi trenger buffer
 	go bcast.Transmitter(16571, new_order_transmit)
@@ -114,6 +114,7 @@ func main(){
 			fmt.Printf("Received: %#v\n", a)
 		}
 	}
+	*/
 
 
 }

@@ -7,6 +7,8 @@ import (
 	//arb "../arbitrator"
 )
 
+
+
 func FSM_button_pressed(button def.Order_button, elevator *def.Elevator) /*arbitrator_cost int*/{
 	driver.Set_button_lamp(button, 1)
 	//arbitrator_cost = arb.Cost_function(elevator, button)
@@ -50,7 +52,7 @@ func FSM_floor_arrival(new_floor int, elevator *def.Elevator){
 					driver.Set_button_lamp(button, 0)
 				}
 
-				driver.Door_open()
+				driver.Door_open_close()
 				elevator.Elevator_state = def.Door_open
 				FSM_on_door_timeout(elevator)
 			}
@@ -78,5 +80,46 @@ func FSM_on_door_timeout(elevator *def.Elevator){
 		break
 	default:
 		break
+	}
+}
+
+
+
+func Button_listener(button_press chan def.Order_button){
+	possible_buttons := [][]int{{0,0,0},{0,0,0},{0,0,0},{0,0,0}}
+	for {
+		for floor := 0; floor < def.N_floors; floor++{
+			for btn := def.Buttoncall_down; int(btn)<def.N_buttons; btw++{
+				if(floor == 0 && btn == def.Buttoncall_down){
+					continue
+				}
+				if(floor == def.N_floors-1 && btn == def.Buttoncall_up){
+					continue
+				}
+
+				var button def.Order_button
+				button.Type = btn
+				button.Floor = floor
+				button_signal := driver.Get_button_signal(button) 
+
+				if button_signal == 1 && (possible_buttons[floor][btn] == 0) {
+					button_press <- def.Order_button{Type: btn, Floor: floor}
+					possible_buttons[floor][button] = GetButtonSignal(button, floor)
+					driver.Set_button_lamp(button, 1)
+				}
+			}
+		}
+	}
+}
+
+func Floor_listener(floor_pass chan int){
+	last_floor := -1
+	var floor_signal int
+	for {
+		floor_signal = driver.Get_floor_sensor_signal()
+		if (floor_signal != -1)&&(last_floor != floor_signal){
+			floor_pass <- floor_signal
+			driver.Set_floor_indicator(floor_signal)
+		}
 	}
 }

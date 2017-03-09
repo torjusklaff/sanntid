@@ -58,7 +58,7 @@ func Elevator_on_floor(on_floor chan int, elevator def.Elevator){
 	}
 }
 
-func Door_open(){
+func Door_open_close(){
 	Set_door_open_lamp(1)
 	door_timer := time.NewTimer(3*time.Second)
 	<- door_timer.C

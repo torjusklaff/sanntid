@@ -5,6 +5,7 @@ package definitions
 const (
 	N_floors  = 4
 	N_buttons = 3
+	N_elevators = 3
 )
 
 type Motor_direction int
@@ -26,7 +27,11 @@ const (
 type Order_button struct {
 	Type  Button_type
 	Floor int
+	Internal bool
+	Id string
 }
+
+
 
 type Elev_states int
 
@@ -36,6 +41,7 @@ const (
 	Moving
 )
 
+
 type Elevator struct {
 	Last_floor         int
 	Current_direction  Motor_direction
@@ -44,12 +50,9 @@ type Elevator struct {
 	Id 					string
 }
 
-type Network_message struct {
-	message 			string
-	//queue				[N_floors][N_buttons]int
-}
 
-type cost_message struct {
-	cost float32
-	id string
+type Cost struct {
+	Cost 				float32
+	Current_order 		Order_button
+	Id 					string
 }
