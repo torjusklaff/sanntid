@@ -16,7 +16,7 @@ func check_error(err error){
 
 
 func To_backup(str string) {
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	check_error(err)
 	defer f.Close()
 
@@ -24,8 +24,8 @@ func To_backup(str string) {
 	log.Println(str)
 }
 
-
-func Read_last_line() line string {
+/*
+func Read_last_line() string {
 	f, err := os.Open(filename)
 	check_error(err)
 	defer f.Close()
@@ -33,6 +33,7 @@ func Read_last_line() line string {
 	buf := make([]byte, string_size)
 	stat, err := os.Stat(filename)
 	start := stat.Size() - string_size
-	line, err = f.ReadAt(buf, start)
+	_, err = f.ReadAt(buf, start)
 	check_error(err)
 }
+*/

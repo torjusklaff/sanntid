@@ -4,17 +4,17 @@ package driver // where "driver" is the folder that contains io.go, io.c, io.h, 
 #cgo LDFLAGS: -lcomedi -lm
 #include "elev.h"
 */
-import (
-	def "/definitions"
-	"C"
-)
+import "C"
+import def "../definitions"
+import "time"
+//import "fmt"
 
 func Set_motor_direction(dirn def.Motor_direction) {
 	C.elev_set_motor_direction(C.elev_motor_direction_t(dirn))
 }
 
-func Set_button_lamp(button def.Button_type, floor int, value int) {
-	C.elev_set_button_lamp(C.elev_button_type_t(button), C.int(floor), C.int(value))
+func Set_button_lamp(button def.Order_button, value int) {
+	C.elev_set_button_lamp(C.elev_button_type_t(button.Type), C.int(button.Floor), C.int(value))
 }
 
 func Set_floor_indicator(floor int) {
@@ -25,15 +25,20 @@ func Set_door_open_lamp(value int) {
 	C.elev_set_door_open_lamp(C.int(value))
 }
 
-func Get_button_signal(button def.Button_type, floor int) int {
-	return int(C.elev_get_button_signal(C.elev_button_type_t(button), C.int(floor)))
+func Get_button_signal(button def.Order_button) int {
+	return int(C.elev_get_button_signal(C.elev_button_type_t(button.Type), C.int(button.Floor)))
 }
 
 func Check_all_buttons(button_pressed chan def.Order_button){
 	var pressed_button def.Order_button
-	for floor := 1; floor < def.N_floors+1; floor++{
+	var button_signal def.Order_button
+
+	for floor := 0; floor < def.N_floors; floor++{
 		for button := 0; button < def.N_buttons; button++{
-			if Get_button_signal(button, floor) == 1{
+			button_signal.Floor = floor
+			button_signal.Type = def.Button_type(button)
+
+			if Get_button_signal(button_signal) == 1{
 				pressed_button.Type = def.Button_type(button)
 				pressed_button.Floor = floor
 				
@@ -47,37 +52,53 @@ func Get_floor_sensor_signal() int {
 	return int(C.elev_get_floor_sensor_signal())
 }
 
-func clear_all_lamps() {
-	for floor := 1; floor < N_floors+1; floor++ {
-		if floor < N_floors-1 {
-			Set_button_lamp(def.Buttoncall_down, floor, 0)
-		}
-		if floor > 0 {
-			Set_button_lamp(def.Buttoncall_up, floor, 0)
-		}
-		Set_button_lamp(def.Buttoncall_internal, floor, 0)
+func Elevator_on_floor(on_floor chan int, elevator def.Elevator){
+	if (Get_floor_sensor_signal() != elevator.Last_floor) && (Get_floor_sensor_signal() != -1){
+		on_floor <- Get_floor_sensor_signal()
 	}
 }
 
-func Elev_init() def.Elevator elev{
+func Door_open(){
+	Set_door_open_lamp(1)
+	door_timer := time.NewTimer(3*time.Second)
+	<- door_timer.C
+	Set_door_open_lamp(0)
+}
+
+func clear_all_lamps() { 				// necessary function ??
+	var buttons def.Order_button
+	for floor := 0; floor < def.N_floors; floor++ {
+		buttons.Floor = floor
+		if floor < def.N_floors-1 {
+			buttons.Type = def.Buttoncall_down
+			Set_button_lamp(buttons, 0)
+		}
+		if floor > 0 {
+			buttons.Type = def.Buttoncall_up
+			Set_button_lamp(buttons, 0)
+		}
+		buttons.Type = def.Buttoncall_internal
+		Set_button_lamp(buttons, 0)
+	}
+}
+
+func Elev_init() def.Elevator{
 	C.elev_init()
-	clear_all_lamps()
+	//clear_all_lamps()
 
 	Set_motor_direction(def.Dir_down)
-	for Get_floor_sensor_signal() == -1 {
+	for (Get_floor_sensor_signal() == -1) {
 	}
 	Set_motor_direction(def.Dir_stop)
+	Set_floor_indicator(Get_floor_sensor_signal())
 
 	// Initializing an elevator-object 
 	var elev def.Elevator
-	elev.current_direction = def.Dir_stop
-	elev.queue = [N_floors]int
-	for floor := 0; floor < N_floors; floor++ {
-		elev.queue[floor] = [N_buttons]int
-		for buttons := 0; buttons < N_buttons; buttons++{
-			elev.queue[floor][button] = 0
-		}
-	}
-	elev.elevator_state = def.idle
-	elev.door_open_duration = 5
+	elev.Last_floor = Get_floor_sensor_signal()
+	elev.Current_direction = def.Dir_stop
+	elev.Queue = [4][3]int{{0,0,0},{0,0,0},{0,0,0},{0,0,0}}
+	elev.Elevator_state = def.Idle
+	
+
+	return elev
 }
