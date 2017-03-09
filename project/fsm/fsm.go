@@ -31,30 +31,33 @@ func FSM_button_pressed(button def.Order_button, elevator *def.Elevator) /*arbit
 }
 
 func FSM_floor_arrival(new_floor int, elevator *def.Elevator){
-	elevator.Last_floor = new_floor
-	driver.Set_floor_indicator(new_floor)
+	if new_floor == -1{
+	} else {
+		driver.Set_floor_indicator(new_floor)
+		elevator.Last_floor = new_floor
 
-	switch(elevator.Elevator_state){
-	case def.Moving:
-		if(queue.Should_stop(*elevator)){
-			driver.Set_motor_direction(def.Dir_stop)
-			queue.Clear_at_floor(elevator, new_floor)
+		switch(elevator.Elevator_state){
+		case def.Moving:
+			if(queue.Should_stop(*elevator)){
+				driver.Set_motor_direction(def.Dir_stop)
+				queue.Clear_at_floor(elevator, new_floor)
 
-			//skrur av lys for den bestillingen som slettes
-			for btn := 0; btn < def.N_buttons; btn++{
-				var button def.Order_button
-				button.Type = def.Button_type(btn)
-				button.Floor = elevator.Last_floor
-				driver.Set_button_lamp(button, 0)
+				//skrur av lys for den bestillingen som slettes
+				for btn := 0; btn < def.N_buttons; btn++{
+					var button def.Order_button
+					button.Type = def.Button_type(btn)
+					button.Floor = elevator.Last_floor
+					driver.Set_button_lamp(button, 0)
+				}
+
+				driver.Door_open()
+				elevator.Elevator_state = def.Door_open
+				FSM_on_door_timeout(elevator)
 			}
-
-			driver.Door_open()
-			elevator.Elevator_state = def.Door_open
-			FSM_on_door_timeout(elevator)
+			break
+		default:
+			break
 		}
-		break
-	default:
-		break
 	}
 }
 
