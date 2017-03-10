@@ -25,6 +25,7 @@ func main(){
 	send_new_order := make(chan def.Order_button)
 	send_remove_order := make(chan def.Order_button)
 
+
 	go net.Network_init(n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order)
 	go Testing_network_channels(send_cost, send_new_order)
 
@@ -32,8 +33,8 @@ func main(){
 		select {
 		case cost := <- receive_cost:
 			fmt.Printf("Cost: %v", cost.Cost)
-		/*case order := <- receive_new_order:
-			fmt.Printf("Order: %v", order.Floor)*/
+		case order := <- receive_new_order:
+			fmt.Printf("Order: %v", order.Floor)
 		}
 	}
 
@@ -42,10 +43,11 @@ func main(){
 
 func Testing_network_channels(send_cost chan def.Cost, send_new_order chan def.Order_button) {
 	it := 1
-	var cost_msg def.Cost
+	btn := def.Order_button{def.Buttoncall_down, 1, false, ""}
+	//cost_msg := def.Cost{0, btn, ""}
 	for {
-		cost_msg.Cost = float32(it)
-		send_cost <- cost_msg
+		btn.Floor = it
+		send_new_order <- btn
 		time.Sleep(5*time.Second)
 	}
 }
