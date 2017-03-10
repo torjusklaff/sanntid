@@ -2,7 +2,7 @@ package arbitrator
 
 import (
 	def "../definitions"
-	"fmt"
+	//"fmt"
 	"math"
 	"strings"
 )
@@ -44,7 +44,7 @@ func Arbitrator_init(
 	number_of_connected_elevators chan int) {
 
 	var n_elevators int
-	fmt.Printf("We arbitrate the init\n")
+
 	for {
 		select {
 		case elevators := <-number_of_connected_elevators:
