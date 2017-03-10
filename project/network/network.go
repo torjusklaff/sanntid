@@ -5,7 +5,10 @@ import (
 	"./localip"
 	"./peers"
 	"time"
-	"../def"
+	def "../definitions"
+	"os"
+	"fmt"
+	"flag"
 )
 
 const (
@@ -17,36 +20,29 @@ const (
 	broadcast_time = 1*time.Second
 )
 
-type Cost_msg struct {
-	Adsress string
-	Data def.Cost
-}
-
-type Order_msg struct {
-	Adsress string
-	Data def.Order_button
-}
-
 
 // Setter opp alle channels og funksjoner i en felles initialisering
 func Network_init(
-	n_elevators chan<- int, 
-	receive_cost chan<- def.Cost,
-	receive_new_order chan<- def.Order_button,
-	receive_remover_order chan<- def.Order_button,
-	send_cost chan<- def.Cost,
-	send_new_order chan<- def.Order_button,
-	send_remove_order chan<- def.Order_button){
+	n_elevators chan int, 
+	receive_cost chan def.Cost,
+	receive_new_order chan def.Order_button,
+	receive_remover_order chan def.Order_button,
+	send_cost chan def.Cost,
+	send_new_order chan def.Order_button,
+	send_remove_order chan def.Order_button){
 
 	id := Get_id()
-	go Peer_listener(id, n_elevators)
-	go Send_msg(id, send_cost, send_new_order,send_remove_order)
-	go Receive_msg(receive_cost, receive_new_order,receive_remover_order)
+
+	for {
+		go Peer_listener(id, n_elevators)
+		go Send_msg(id, send_cost, send_new_order,send_remove_order)
+		go Receive_msg(receive_cost, receive_new_order,receive_remover_order)
+	}
 }
 
 
 
-func Get_id() id {
+func Get_id() string {
 	var id string
 	flag.StringVar(&id, "id", "", "id of this peer")
 	flag.Parse()
@@ -56,10 +52,11 @@ func Get_id() id {
 		localIP = "DISCONNECTED"
 	}
 	id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
+	return id
 }
 
 // Setter opp en peer-listener som sjekker etter updates på levende heiser
-func Peer_listener(id string, number_of_elevators chan<- int){
+func Peer_listener(id string, n_elevators chan int){
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
 	go peers.Transmitter(peer_port, id, peerTxEnable)
@@ -71,7 +68,7 @@ func Peer_listener(id string, number_of_elevators chan<- int){
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
-			number_of_peers <- len(p.Peers)
+			n_elevators <- len(p.Peers)
 		}
 	}
 }
@@ -80,13 +77,13 @@ func Peer_listener(id string, number_of_elevators chan<- int){
 // se main fra network-module gitt på github
 func Send_msg(
 	localIP string, 
-	send_cost <-chan def.Cost, 
-	send_new_order <-chan def.Order_button,
-	send_remove_order <-chan def.Order_button){
+	send_cost chan def.Cost, 
+	send_new_order chan def.Order_button,
+	send_remove_order chan def.Order_button){
 
-	bcast_send_cost := make(chan Cost_msg)
-	bcast_send_new_order := make(chan Order_msg)
-	bcast_send_remove_order := make(chan Order_msg)
+	bcast_send_cost := make(chan def.Cost)
+	bcast_send_new_order := make(chan def.Order_button)
+	bcast_send_remove_order := make(chan def.Order_button)
 
 	go bcast.Transmitter(get_cost_port, bcast_send_cost)
 	go bcast.Transmitter(get_order_port, bcast_send_new_order)
@@ -95,27 +92,27 @@ func Send_msg(
 	for {
 		select {
 		case msg := <-send_cost:
-			sending := Cost_msg{Address: localIP, Data: msg}
+			sending := msg
 			bcast_send_cost <- sending
 		case msg := <-send_new_order:
-			sending := Order_msg{Address: localIP, Data: msg}
-			bcast_send_cost <- sending
+			sending := msg
+			bcast_send_new_order <- sending
 		case msg := <-send_remove_order:
-			sending := Order_msg{Address: localIP, Data: msg}
-			bcast_send_cost <- sending
+			sending := msg
+			bcast_send_remove_order <- sending
 		}
 	}
 }
 
 // Setter opp channels som lytter etter msg fra Send_msg()		(se main fra network-modul)
 func Receive_msg(
-	receive_cost chan<- def.Cost, 
-	receive_new_order chan<- def.Order_button,
-	receive_remover_order chan<- def.Order_button){
+	receive_cost chan def.Cost, 
+	receive_new_order chan def.Order_button,
+	receive_remover_order chan def.Order_button){
 
-	bcast_receive_cost := make(chan Cost_msg)
-	bcast_receive_new_order := make(chan Order_msg)
-	bcast_receive_remove_order := make(chan Order_msg)
+	bcast_receive_cost := make(chan def.Cost)
+	bcast_receive_new_order := make(chan def.Order_button)
+	bcast_receive_remove_order := make(chan def.Order_button)
 
 	go bcast.Receiver(get_cost_port, bcast_receive_cost)
 	go bcast.Receiver(get_order_port, bcast_receive_new_order)
@@ -124,11 +121,11 @@ func Receive_msg(
 	for {
 		select {
 		case msg := <-bcast_receive_cost:
-			receive_cost <_ msg.Data
+			receive_cost <- msg
 		case msg := <-bcast_receive_new_order:
-			receive_new_order <_ msg.Data
-		case msg := <-bcast_receive_remover_order:
-			receive_remover_order <_ msg.Data
+			receive_new_order <- msg
+		case msg := <-bcast_receive_remove_order:
+			receive_remover_order <- msg
 		}
 	}	
 }
