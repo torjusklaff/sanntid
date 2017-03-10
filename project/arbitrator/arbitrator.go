@@ -44,7 +44,7 @@ func Arbitrator_init(
 	number_of_connected_elevators chan int) {
 
 	var n_elevators int
-	fmt.Printf("We arbitrate the init")
+	fmt.Printf("We arbitrate the init\n")
 	for {
 		select {
 		case elevators := <-number_of_connected_elevators:
@@ -92,6 +92,8 @@ func order_selection(
 	// sender
 	if lowest_cost.Id == localIP {
 		assigned_new_order <- current_cost.Current_order
+	} else {
+		fmt.Printf("Someone else took the order\n")
 	}
 }
 

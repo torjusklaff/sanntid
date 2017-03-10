@@ -32,8 +32,8 @@ type Order_button struct {
 type Elev_states int
 
 const (
-	Idle      Elev_states = iota
-	Door_open             //Not really necessary, look into it (Change to On_floor)
+	Idle          Elev_states = iota
+	Stop_on_floor             //Not really necessary, look into it (Change to On_floor)
 	Moving
 )
 

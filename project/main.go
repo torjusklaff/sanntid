@@ -22,6 +22,10 @@ func main() {
 
 	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
 
+	var previous_order def.Order_button
+	previous_order.Type = def.Buttoncall_internal
+	previous_order.Floor = elevator.Last_floor
+
 	// 	CHANNELS
 	n_elevators := make(chan int)
 
@@ -33,7 +37,7 @@ func main() {
 	send_new_order := make(chan def.Order_button)
 	send_remove_order := make(chan def.Order_button)
 
-	assigned_new_order := make(chan def.Order_button)
+	assigned_new_order := make(chan def.Order_button, 100)
 
 	//button_pressed := make(chan def.Order_button)
 	on_floor := make(chan int)
@@ -53,7 +57,7 @@ func main() {
 			fmt.Printf("Timer stopped\n")
 			fsm.FSM_on_door_timeout(&elevator)
 		case new_order := <-assigned_new_order:
-			fmt.Print("Assigned new order")
+			fmt.Print("Assigned new order\n")
 			queue.Enqueue(&elevator, new_order)
 			fsm.FSM_next_order(&elevator, new_order)
 		default:

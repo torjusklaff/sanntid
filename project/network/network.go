@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	peer_port         = 15647
+	peer_port         = 20100
 	send_order_port   = 20012
 	remove_order_port = 16572
 	send_cost_port    = 16573

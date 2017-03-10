@@ -2,7 +2,7 @@ package queue
 
 import (
 	def "../definitions"
-	//"fmt"
+	"fmt"
 )
 
 func requests_above(e def.Elevator) bool {
@@ -75,10 +75,17 @@ func Choose_direction(e def.Elevator) def.Motor_direction {
 func Clear_at_floor(e *def.Elevator, floor int) {
 	for btn := 0; btn < def.N_buttons; btn++ {
 		e.Queue[floor][btn] = 0
-		var button def.Order_button
-		button.Type = def.Button_type(btn)
-		button.Floor = floor
 	}
+}
+
+func Print_queue(e def.Elevator) {
+	for f := 0; f < def.N_floors; f++ {
+		for btn := 0; btn < def.N_buttons; btn++ {
+			fmt.Printf("%v ", e.Queue[f][btn])
+		}
+		fmt.Printf("\n")
+	}
+	fmt.Printf("\n\n")
 }
 
 func Should_stop(e def.Elevator) bool {
