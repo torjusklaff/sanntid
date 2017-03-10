@@ -1,46 +1,41 @@
 package network
 
 import (
+	def "../definitions"
 	"./bcast"
 	"./localip"
 	"./peers"
-	"time"
-	def "../definitions"
-	"os"
-	"fmt"
 	"flag"
+	"fmt"
+	"os"
+	"time"
 )
 
 const (
-	peer_port = 15647
-	get_order_port = 16571
+	peer_port         = 15647
+	send_order_port   = 20012
 	remove_order_port = 16572
-	get_cost_port = 16573
-	backup_port = 16574
-	broadcast_time = 1*time.Second
+	send_cost_port    = 16573
+	backup_port       = 16574
+	broadcast_time    = 1 * time.Second
 )
-
 
 // Setter opp alle channels og funksjoner i en felles initialisering
 func Network_init(
-	n_elevators chan int, 
+	n_elevators chan int,
 	receive_cost chan def.Cost,
 	receive_new_order chan def.Order_button,
 	receive_remover_order chan def.Order_button,
 	send_cost chan def.Cost,
 	send_new_order chan def.Order_button,
-	send_remove_order chan def.Order_button){
+	send_remove_order chan def.Order_button) {
 
 	id := Get_id()
 
-	for {
-		go Peer_listener(id, n_elevators)
-		go Send_msg(id, send_cost, send_new_order,send_remove_order)
-		go Receive_msg(receive_cost, receive_new_order,receive_remover_order)
-	}
+	go Peer_listener(id, n_elevators)
+	go Send_msg(id, send_cost, send_new_order, send_remove_order)
+	go Receive_msg(receive_cost, receive_new_order, receive_remover_order)
 }
-
-
 
 func Get_id() string {
 	var id string
@@ -56,7 +51,7 @@ func Get_id() string {
 }
 
 // Setter opp en peer-listener som sjekker etter updates på levende heiser
-func Peer_listener(id string, n_elevators chan int){
+func Peer_listener(id string, n_elevators chan int) {
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
 	go peers.Transmitter(peer_port, id, peerTxEnable)
@@ -73,20 +68,20 @@ func Peer_listener(id string, n_elevators chan int){
 	}
 }
 
-// Setter opp channels for broadcast og sender det som kommer inn på input-channelsene 
+// Setter opp channels for broadcast og sender det som kommer inn på input-channelsene
 // se main fra network-module gitt på github
 func Send_msg(
-	localIP string, 
-	send_cost chan def.Cost, 
+	localIP string,
+	send_cost chan def.Cost,
 	send_new_order chan def.Order_button,
-	send_remove_order chan def.Order_button){
+	send_remove_order chan def.Order_button) {
 
 	bcast_send_cost := make(chan def.Cost)
 	bcast_send_new_order := make(chan def.Order_button)
 	bcast_send_remove_order := make(chan def.Order_button)
 
-	go bcast.Transmitter(get_cost_port, bcast_send_cost)
-	go bcast.Transmitter(get_order_port, bcast_send_new_order)
+	go bcast.Transmitter(send_cost_port, bcast_send_cost)
+	go bcast.Transmitter(send_order_port, bcast_send_new_order)
 	go bcast.Transmitter(remove_order_port, bcast_send_remove_order)
 
 	for {
@@ -106,16 +101,16 @@ func Send_msg(
 
 // Setter opp channels som lytter etter msg fra Send_msg()		(se main fra network-modul)
 func Receive_msg(
-	receive_cost chan def.Cost, 
+	receive_cost chan def.Cost,
 	receive_new_order chan def.Order_button,
-	receive_remover_order chan def.Order_button){
+	receive_remover_order chan def.Order_button) {
 
 	bcast_receive_cost := make(chan def.Cost)
 	bcast_receive_new_order := make(chan def.Order_button)
 	bcast_receive_remove_order := make(chan def.Order_button)
 
-	go bcast.Receiver(get_cost_port, bcast_receive_cost)
-	go bcast.Receiver(get_order_port, bcast_receive_new_order)
+	go bcast.Receiver(send_cost_port, bcast_receive_cost)
+	go bcast.Receiver(send_order_port, bcast_receive_new_order)
 	go bcast.Receiver(remove_order_port, bcast_receive_remove_order)
 
 	for {
@@ -127,5 +122,5 @@ func Receive_msg(
 		case msg := <-bcast_receive_remove_order:
 			receive_remover_order <- msg
 		}
-	}	
+	}
 }

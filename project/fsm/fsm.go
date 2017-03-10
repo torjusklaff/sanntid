@@ -5,6 +5,7 @@ import (
 	"../driver"
 	"../queue"
 	//arb "../arbitrator"
+	"time"
 )
 
 func FSM_button_pressed(button def.Order_button, elevator *def.Elevator) /*arbitrator_cost int*/ {
@@ -15,22 +16,23 @@ func FSM_button_pressed(button def.Order_button, elevator *def.Elevator) /*arbit
 
 	switch elevator.Elevator_state {
 	case def.Idle:
-		elevator.Current_direction = queue.Choose_direction(*elevator)
-		driver.Set_motor_direction(elevator.Current_direction)
-
+		if button.Floor == elevator.Last_floor {
+			queue.Clear_at_floor(elevator, elevator.Last_floor)
+		} else {
+			elevator.Current_direction = queue.Choose_direction(*elevator)
+			driver.Set_motor_direction(elevator.Current_direction)
+		}
 		if elevator.Current_direction == def.Dir_stop {
 			elevator.Elevator_state = def.Idle
 		} else {
 			elevator.Elevator_state = def.Moving
 		}
-	case def.Moving:
 	default:
 		break
 	}
-
 }
 
-func FSM_floor_arrival(new_floor int, elevator *def.Elevator) {
+func FSM_floor_arrival(new_floor int, elevator *def.Elevator, timer *time.Timer) {
 	if new_floor == -1 {
 	} else {
 		driver.Set_floor_indicator(new_floor)
@@ -49,10 +51,9 @@ func FSM_floor_arrival(new_floor int, elevator *def.Elevator) {
 					button.Floor = elevator.Last_floor
 					driver.Set_button_lamp(button, 0)
 				}
-
-				driver.Door_open_close()
+				driver.Set_door_open_lamp(1)
+				timer.Reset(3 * time.Second)
 				elevator.Elevator_state = def.Door_open
-				FSM_on_door_timeout(elevator)
 			}
 			break
 		default:
@@ -61,7 +62,24 @@ func FSM_floor_arrival(new_floor int, elevator *def.Elevator) {
 	}
 }
 
-//func FSM_order_in_queue(elevator *def.Elevator)
+func FSM_order_in_queue(elevator *def.Elevator) {
+	switch elevator.Elevator_state {
+	case def.Idle:
+		elevator.Current_direction = queue.Choose_direction(*elevator)
+		driver.Set_motor_direction(elevator.Current_direction)
+
+		if elevator.Current_direction == def.Dir_stop {
+			elevator.Elevator_state = def.Idle
+		} else {
+			elevator.Elevator_state = def.Moving
+		}
+	case def.Moving:
+	case def.Door_open:
+
+	default:
+		break
+	}
+}
 
 func FSM_on_door_timeout(elevator *def.Elevator) {
 	switch elevator.Elevator_state {
