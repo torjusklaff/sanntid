@@ -27,7 +27,7 @@ func requests_below(e def.Elevator) bool {
 	return false
 }
 
-func Queue_not_empty(queue_not_empty chan def.Order_button, e def.Elevator) {
+/*func Queue_not_empty(queue_not_empty chan def.Order_button, e def.Elevator) {
 	for {
 
 		for f := 0; f < def.N_floors; f++ {
@@ -45,7 +45,7 @@ func Queue_not_empty(queue_not_empty chan def.Order_button, e def.Elevator) {
 		}
 		fmt.Printf("\n\n")
 	}
-}
+}*/
 
 func Choose_direction(e def.Elevator) def.Motor_direction {
 	switch e.Current_direction {

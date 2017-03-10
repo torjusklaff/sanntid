@@ -1,19 +1,17 @@
 package definitions
 
-
-
 const (
-	N_floors  = 4
-	N_buttons = 3
+	N_floors    = 4
+	N_buttons   = 3
 	N_elevators = 3
 )
 
 type Motor_direction int
 
 const (
-	Dir_down Motor_direction = -1
-	Dir_stop Motor_direction = 0
-	Dir_up   Motor_direction = 1
+	Dir_down Motor_direction = 1
+	Dir_stop Motor_direction = -1
+	Dir_up   Motor_direction = 0
 )
 
 type Button_type int
@@ -25,34 +23,30 @@ const (
 )
 
 type Order_button struct {
-	Type  Button_type
-	Floor int
+	Type     Button_type
+	Floor    int
 	Internal bool
-	Id string
+	Id       string
 }
-
-
 
 type Elev_states int
 
 const (
-	Idle Elev_states = iota
-	Door_open                  //Not really necessary, look into it (Change to On_floor)
+	Idle      Elev_states = iota
+	Door_open             //Not really necessary, look into it (Change to On_floor)
 	Moving
 )
 
-
 type Elevator struct {
-	Last_floor         int
-	Current_direction  Motor_direction
-	Queue              [N_floors][N_buttons]int
-	Elevator_state     Elev_states
-	Id 					string
+	Last_floor        int
+	Current_direction Motor_direction
+	Queue             [N_floors][N_buttons]int
+	Elevator_state    Elev_states
+	Id                string
 }
 
-
 type Cost struct {
-	Cost 				float32
-	Current_order 		Order_button
-	Id 					string
+	Cost          float32
+	Current_order Order_button
+	Id            string
 }

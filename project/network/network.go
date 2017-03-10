@@ -28,7 +28,7 @@ func Network_init(
 	receive_remover_order chan def.Order_button,
 	send_cost chan def.Cost,
 	send_new_order chan def.Order_button,
-	send_remove_order chan def.Order_button) {
+	send_remove_order chan def.Order_button) id {
 
 	id := Get_id()
 

@@ -9,17 +9,18 @@ import (
 var max_distance int = def.N_floors * def.N_buttons
 
 
-func cost_function(elevator def.Elevator, order def.Order_button) cost{
+func cost_function(elevator def.Elevator, order def.Order_button) float64 {
 	difference := order.Floor - elevator.Last_floor
-	cost := math.Abs(difference) 
-	+ movement_penalty(elevator.State, elevator.Current_direction, difference) 
-	+ turn_penalty(elevator.State, elevator.Last_floor, elevator.Current_direction, order.Floor)
+	cost := math.Abs(float64(difference)) 
+	+ movement_penalty(elevator.Elevator_state, elevator.Current_direction, difference) 
+	+ turn_penalty(elevator.Elevator_state, elevator.Last_floor, elevator.Current_direction, order.Floor)
 	+ order_direction_penalty(elevator.Current_direction, order.Floor, order.Type)
+	return cost
 }
 
 func find_lowest_cost(costs [def.N_elevators]def.Cost) def.Cost {
 	for i := 0; i<len(costs)-1; i++{
-		if costs[i+1].Cost_value < costs[i].Cost_value {
+		if costs[i+1].Cost < costs[i].Cost {
 			temp := costs[i]
 			costs[i] = costs[i+1]
 			costs [i+1] = temp
@@ -39,11 +40,11 @@ func find_lowest_cost(costs [def.N_elevators]def.Cost) def.Cost {
 func Arbitrator_init(
 	e def.Elevator,
 	localIP string, 
-	new_order <-chan def.Order_button, 
-	assigned_new_order <- chan def.Order_button,
-	receive_cost <-chan def.Cost, 
-	send_cost chan<- def.Cost, 
-	number_of_connected_elevators <-chan int){
+	new_order chan def.Order_button, 
+	assigned_new_order chan def.Order_button,
+	receive_cost chan def.Cost, 
+	send_cost chan def.Cost, 
+	number_of_connected_elevators chan int){
 
 	var n_elevators int
 
@@ -140,7 +141,7 @@ func turn_penalty(state def.Elev_states, elevator_floor int, elevator_direction 
 }
 
 
-func order_direction_penalty(elevator_direction def.Motor_direction, order_floor int, order_direction def.Motor_direction) penalty{
+func order_direction_penalty(elevator_direction def.Motor_direction, order_floor int, order_direction def.Button_type) penalty{
 	if (order_floor == 1 || order_floor == driver.N_floors){
 		penalty = 0
 	} else if (elevator_direction != order_direction){
