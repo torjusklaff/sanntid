@@ -2,7 +2,7 @@ package queue
 
 import (
 	def "../definitions"
-	"fmt"
+	//"fmt"
 )
 
 func requests_above(e def.Elevator) bool {

@@ -9,9 +9,9 @@ const (
 type Motor_direction int
 
 const (
-	Dir_down Motor_direction = 1
-	Dir_stop Motor_direction = -1
-	Dir_up   Motor_direction = 0
+	Dir_down Motor_direction = -1
+	Dir_stop Motor_direction = 0
+	Dir_up   Motor_direction = 1
 )
 
 type Button_type int
@@ -46,7 +46,7 @@ type Elevator struct {
 }
 
 type Cost struct {
-	Cost          float32
+	Cost          float64
 	Current_order Order_button
 	Id            string
 }

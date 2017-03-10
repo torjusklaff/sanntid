@@ -5,6 +5,7 @@ import (
 	"../driver"
 	"../queue"
 	//arb "../arbitrator"
+	"fmt"
 	"time"
 )
 
@@ -49,6 +50,7 @@ func FSM_floor_arrival(new_floor int, elevator *def.Elevator, timer *time.Timer)
 				}
 				driver.Set_door_open_lamp(1)
 				timer.Reset(3 * time.Second)
+				fmt.Printf("Timer started\n")
 				elevator.Elevator_state = def.Door_open
 			}
 			break

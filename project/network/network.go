@@ -22,15 +22,14 @@ const (
 
 // Setter opp alle channels og funksjoner i en felles initialisering
 func Network_init(
+	id string,
 	n_elevators chan int,
 	receive_cost chan def.Cost,
 	receive_new_order chan def.Order_button,
 	receive_remover_order chan def.Order_button,
 	send_cost chan def.Cost,
 	send_new_order chan def.Order_button,
-	send_remove_order chan def.Order_button) id {
-
-	id := Get_id()
+	send_remove_order chan def.Order_button) {
 
 	go Peer_listener(id, n_elevators)
 	go Send_msg(id, send_cost, send_new_order, send_remove_order)
@@ -64,6 +63,7 @@ func Peer_listener(id string, n_elevators chan int) {
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 			n_elevators <- len(p.Peers)
+			fmt.Printf("Number of active peers: %v \n", len(p.Peers))
 		}
 	}
 }

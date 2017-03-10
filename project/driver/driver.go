@@ -7,8 +7,7 @@ package driver // where "driver" is the folder that contains io.go, io.c, io.h, 
 import "C"
 import def "../definitions"
 import "time"
-
-//import "fmt"
+import "fmt"
 
 func Set_motor_direction(dirn def.Motor_direction) {
 	C.elev_set_motor_direction(C.elev_motor_direction_t(dirn))
@@ -43,6 +42,7 @@ func Check_all_buttons(button_pressed chan def.Order_button) {
 					pressed_button.Type = def.Button_type(button)
 					pressed_button.Floor = floor
 
+					fmt.Printf("Found button\n")
 					button_pressed <- pressed_button
 				}
 			}
@@ -70,12 +70,14 @@ func Door_open_close() {
 }
 
 func Elev_init() def.Elevator {
+	Set_motor_direction(def.Dir_stop)
 	C.elev_init()
 	//clear_all_lamps()
 
 	Set_motor_direction(def.Dir_down)
 	for Get_floor_sensor_signal() == -1 {
 	}
+	fmt.Printf("Found floor in init\n")
 	Set_motor_direction(def.Dir_stop)
 	Set_floor_indicator(Get_floor_sensor_signal())
 
