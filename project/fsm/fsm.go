@@ -9,11 +9,7 @@ import (
 )
 
 func FSM_button_pressed(button def.Order_button, elevator *def.Elevator) /*arbitrator_cost int*/ {
-	driver.Set_button_lamp(button, 1)
 	//arbitrator_cost = arb.Cost_function(elevator, button)
-
-	queue.Enqueue(elevator, button)
-
 	switch elevator.Elevator_state {
 	case def.Idle:
 		if button.Floor == elevator.Last_floor {
@@ -62,12 +58,21 @@ func FSM_floor_arrival(new_floor int, elevator *def.Elevator, timer *time.Timer)
 	}
 }
 
-func FSM_order_in_queue(elevator *def.Elevator) {
+func FSM_next_order(elevator *def.Elevator, next_order def.Order_button) { //arbitrator decides where we should go next
 	switch elevator.Elevator_state {
 	case def.Idle:
-		elevator.Current_direction = queue.Choose_direction(*elevator)
-		driver.Set_motor_direction(elevator.Current_direction)
+		if next_order.Floor == elevator.Last_floor {
+			queue.Clear_at_floor(elevator, elevator.Last_floor)
+		} else {
+			if next_order.Floor > elevator.Last_floor {
+				elevator.Current_direction = def.Dir_up
+				driver.Set_motor_direction(elevator.Current_direction)
+			} else {
+				elevator.Current_direction = def.Dir_down
+				driver.Set_motor_direction(elevator.Current_direction)
+			}
 
+		}
 		if elevator.Current_direction == def.Dir_stop {
 			elevator.Elevator_state = def.Idle
 		} else {
@@ -82,6 +87,7 @@ func FSM_order_in_queue(elevator *def.Elevator) {
 }
 
 func FSM_on_door_timeout(elevator *def.Elevator) {
+	driver.Set_door_open_lamp(0)
 	switch elevator.Elevator_state {
 	case def.Door_open:
 		elevator.Current_direction = queue.Choose_direction(*elevator)

@@ -7,7 +7,7 @@ import (
 	def "./definitions"
 	"./fsm"
 	//net "./network"
-	//"./queue"
+	"./queue"
 	"fmt"
 	"time"
 )
@@ -20,22 +20,28 @@ func main() {
 	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
 
 	button_pressed := make(chan def.Order_button)
+	queue_not_empty := make(chan def.Order_button)
 	fmt.Printf("Made channel button_pressed\n")
 	on_floor := make(chan int)
 	fmt.Printf("Made channel on_floor\n")
 	//next_in_queue := make(chan def.Order_button)
+	go queue.Queue_not_empty(queue_not_empty, elevator)
 	go driver.Check_all_buttons(button_pressed)
 	go driver.Elevator_on_floor(on_floor, elevator)
 
 	for {
 		select {
 		case button_is_actually_pressed := <-button_pressed:
-			fsm.FSM_button_pressed(button_is_actually_pressed, &elevator)
+			queue.Enqueue(&elevator, button_is_actually_pressed)
+			driver.Set_button_lamp(button_is_actually_pressed, 1)
 		case floor := <-on_floor:
 			fsm.FSM_floor_arrival(floor, &elevator, door_timer)
 		case <-door_timer.C:
 			fmt.Printf("Timer stopped\n")
 			fsm.FSM_on_door_timeout(&elevator)
+		case next_order := <-queue_not_empty:
+			fmt.Printf("New order get\n")
+			fsm.FSM_button_pressed(next_order, &elevator)
 		default:
 			break
 		}
