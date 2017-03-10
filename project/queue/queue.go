@@ -27,26 +27,6 @@ func requests_below(e def.Elevator) bool {
 	return false
 }
 
-/*func Queue_not_empty(queue_not_empty chan def.Order_button, e def.Elevator) {
-	for {
-
-		for f := 0; f < def.N_floors; f++ {
-			for btn := 0; btn < def.N_buttons; btn++ {
-				fmt.Printf("%v ", e.Queue[f][btn])
-				if e.Queue[f][btn] == 1 {
-					var order def.Order_button
-					order.Type = def.Button_type(btn)
-					order.Floor = f
-					fmt.Printf("We come this far\n")
-					queue_not_empty <- order
-				}
-			}
-			fmt.Printf("\n")
-		}
-		fmt.Printf("\n\n")
-	}
-}*/
-
 func Choose_direction(e def.Elevator) def.Motor_direction {
 	switch e.Current_direction {
 	case def.Dir_up:
@@ -101,6 +81,6 @@ func Should_stop(e def.Elevator) bool {
 	return true
 }
 
-func Enqueue(e *def.Elevator, order def.Order_button) {
+func Enqueue(e *def.Elevator, order def.Order) {
 	e.Queue[order.Floor][order.Type] = 1
 }

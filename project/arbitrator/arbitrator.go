@@ -9,11 +9,13 @@ import (
 
 var max_distance int = def.N_floors * def.N_buttons
 
-func cost_function(elevator def.Elevator, order def.Order_button) float64 {
+func cost_function(elevator def.Elevator, order def.Order) float64 {
 	difference := order.Floor - elevator.Last_floor
 	cost := math.Abs(float64(difference)) + movement_penalty(elevator.Elevator_state, elevator.Current_direction, difference) + turn_penalty(elevator.Elevator_state, elevator.Last_floor, elevator.Current_direction, order.Floor) + order_direction_penalty(elevator.Current_direction, order.Floor, order.Type)
 	return cost
 }
+
+func Arbitrator_optimal_next_order() def.Order
 
 func find_lowest_cost(costs [def.N_elevators]def.Cost) def.Cost {
 	for i := 0; i < len(costs)-1; i++ {
@@ -37,8 +39,8 @@ func find_lowest_cost(costs [def.N_elevators]def.Cost) def.Cost {
 func Arbitrator_init(
 	e def.Elevator,
 	localIP string,
-	receive_new_order chan def.Order_button,
-	assigned_new_order chan def.Order_button,
+	receive_new_order chan def.Order,
+	assigned_new_order chan def.Order,
 	receive_cost chan def.Cost,
 	send_cost chan def.Cost,
 	number_of_connected_elevators chan int) {
@@ -59,7 +61,7 @@ func Arbitrator_init(
 
 // Bestemmer om current heis skal ta bestillingen eller ikke, sender da på assigned_new_order
 func order_selection(
-	assigned_new_order chan<- def.Order_button,
+	assigned_new_order chan<- def.Order,
 	receive_cost <-chan def.Cost,
 	n_elevators int,
 	current_cost def.Cost,

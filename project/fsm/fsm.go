@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func FSM_button_pressed(button def.Order_button, elevator *def.Elevator) /*arbitrator_cost int*/ {
+func FSM_button_pressed(button def.Order, elevator *def.Elevator) /*arbitrator_cost int*/ {
 	//arbitrator_cost = arb.Cost_function(elevator, button)
 	switch elevator.Elevator_state {
 	case def.Idle:
@@ -54,7 +54,7 @@ func FSM_floor_arrival(new_floor int, elevator *def.Elevator, timer *time.Timer)
 	}
 }
 
-func FSM_next_order(elevator *def.Elevator, next_order def.Order_button) { //arbitrator decides where we should go next
+func FSM_next_order(elevator *def.Elevator, next_order def.Order) { //arbitrator decides where we should go next
 	driver.Set_button_lamp(next_order, 1)
 	switch elevator.Elevator_state {
 	case def.Idle:

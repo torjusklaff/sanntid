@@ -22,7 +22,7 @@ const (
 	Buttoncall_internal Button_type = 2
 )
 
-type Order_button struct {
+type Order struct {
 	Type     Button_type
 	Floor    int
 	Internal bool
@@ -47,6 +47,6 @@ type Elevator struct {
 
 type Cost struct {
 	Cost          float64
-	Current_order Order_button
+	Current_order Order
 	Id            string
 }
