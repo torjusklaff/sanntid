@@ -58,7 +58,7 @@ func main() {
 		case new_order := <-assigned_new_order:
 			fmt.Print("Assigned new order\n")
 			queue.Enqueue(&elevator, new_order)
-			fsm.FSM_next_order(&elevator, new_order)
+			fsm.FSM_next_order(&elevator, new_order, door_timer)
 		default:
 			break
 		}

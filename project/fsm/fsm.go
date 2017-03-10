@@ -9,26 +9,6 @@ import (
 	"time"
 )
 
-func FSM_button_pressed(button def.Order, elevator *def.Elevator) /*arbitrator_cost int*/ {
-	//arbitrator_cost = arb.Cost_function(elevator, button)
-	switch elevator.Elevator_state {
-	case def.Idle:
-		if button.Floor == elevator.Last_floor {
-			queue.Clear_at_floor(elevator, elevator.Last_floor)
-		} else {
-			elevator.Current_direction = queue.Choose_direction(*elevator)
-			driver.Set_motor_direction(elevator.Current_direction)
-		}
-		if elevator.Current_direction == def.Dir_stop {
-			elevator.Elevator_state = def.Idle
-		} else {
-			elevator.Elevator_state = def.Moving
-		}
-	default:
-		break
-	}
-}
-
 func FSM_floor_arrival(new_floor int, elevator *def.Elevator, timer *time.Timer) {
 	if new_floor == -1 {
 	} else {
@@ -54,7 +34,7 @@ func FSM_floor_arrival(new_floor int, elevator *def.Elevator, timer *time.Timer)
 	}
 }
 
-func FSM_next_order(elevator *def.Elevator, next_order def.Order) { //arbitrator decides where we should go next
+func FSM_next_order(elevator *def.Elevator, next_order def.Order, timer *time.Timer) { //arbitrator decides where we should go next
 	driver.Set_button_lamp(next_order, 1)
 	switch elevator.Elevator_state {
 	case def.Idle:
@@ -62,6 +42,9 @@ func FSM_next_order(elevator *def.Elevator, next_order def.Order) { //arbitrator
 		if next_order.Floor == elevator.Last_floor {
 			queue.Clear_at_floor(elevator, elevator.Last_floor)
 			driver.Clear_lights_at_floor(elevator.Last_floor)
+			timer.Reset(3 * time.Second)
+			driver.Set_door_open_lamp(1)
+			elevator.Elevator_state = def.Stop_on_floor
 		} else {
 
 			if next_order.Floor > elevator.Last_floor {
@@ -80,6 +63,8 @@ func FSM_next_order(elevator *def.Elevator, next_order def.Order) { //arbitrator
 		}
 	case def.Moving:
 	case def.Stop_on_floor:
+		queue.Clear_at_floor(elevator, elevator.Last_floor)
+		driver.Clear_lights_at_floor(elevator.Last_floor)
 	default:
 		break
 	}

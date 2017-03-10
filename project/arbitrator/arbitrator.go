@@ -2,7 +2,7 @@ package arbitrator
 
 import (
 	def "../definitions"
-	//"fmt"
+	"fmt"
 	"math"
 	"strings"
 )
@@ -15,7 +15,9 @@ func cost_function(elevator def.Elevator, order def.Order) float64 {
 	return cost
 }
 
-func Arbitrator_optimal_next_order() def.Order
+func arbitrator_optimal_next_order() {
+	//enten lag eller ta inn en liste med alle bestillinger, send top til fsm_next_order
+}
 
 func find_lowest_cost(costs [def.N_elevators]def.Cost) def.Cost {
 	for i := 0; i < len(costs)-1; i++ {
@@ -52,7 +54,7 @@ func Arbitrator_init(
 		case elevators := <-number_of_connected_elevators:
 			n_elevators = elevators
 		case current_new_order := <-receive_new_order:
-			fmt.Print("Registered new order in arbitrator\n")
+			fmt.Printf("Registered new order in arbitrator\n")
 			current_cost := def.Cost{Cost: cost_function(e, current_new_order), Current_order: current_new_order, Id: localIP}
 			order_selection(assigned_new_order, receive_cost, n_elevators, current_cost, localIP)
 		}

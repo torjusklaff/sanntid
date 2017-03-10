@@ -38,6 +38,13 @@ func Choose_direction(e def.Elevator) def.Motor_direction {
 			return def.Dir_stop
 		}
 	case def.Dir_down:
+		if requests_below(e) {
+			return def.Dir_down
+		} else if requests_above(e) {
+			return def.Dir_up
+		} else {
+			return def.Dir_stop
+		}
 	case def.Dir_stop:
 		if requests_below(e) {
 			return def.Dir_down
