@@ -55,8 +55,10 @@ func Get_floor_sensor_signal() int {
 }
 
 func Elevator_on_floor(on_floor chan int, elevator def.Elevator) {
-	if (Get_floor_sensor_signal() != elevator.Last_floor) && (Get_floor_sensor_signal() != -1) {
-		on_floor <- Get_floor_sensor_signal()
+	for {
+		if (Get_floor_sensor_signal() != elevator.Last_floor) && (Get_floor_sensor_signal() != -1) {
+			on_floor <- Get_floor_sensor_signal()
+		}
 	}
 }
 
