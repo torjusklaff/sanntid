@@ -15,6 +15,7 @@ import (
 )
 
 func main() {
+	all_external_orders := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 
 	door_timer := time.NewTimer(3 * time.Second)
 	door_timer.Stop()
@@ -43,9 +44,12 @@ func main() {
 	send_new_order := make(chan def.Order)
 	send_remove_order := make(chan def.Order)
 	assigned_new_order := make(chan def.Order)
+	global_queue := make(chan [][]int)
 
 	//button_pressed := make(chan def.Order)
 	on_floor := make(chan int)
+
+
 
 	id := net.Get_id()
 	go net.Network_init(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order)
@@ -66,6 +70,10 @@ func main() {
 			fmt.Print("Assigned new order\n")
 			queue.Enqueue(&elevator, new_order)
 			fsm.FSM_next_order(&elevator, new_order, door_timer)
+			driver.Set_button_lamp_from_queue(elevator.Queue, "internal")
+		case queue_all := <-global_queue:
+			all_external_orders = queue_all
+			driver.Set_button_lamp_from_queue(all_external_orders, "global")
 		default:
 			break
 		}

@@ -23,6 +23,28 @@ func Set_button_lamp(button def.Order, value int) {
 	C.elev_set_button_lamp(C.elev_button_type_t(button.Type), C.int(button.Floor), C.int(value))
 }
 
+func Set_button_lamp_from_queue(queue [][]int, global_or_internal string) {
+	if global_or_internal == "global"{
+		n_buttons = 2
+	} else if global_or_internal == "internal"{
+		n_buttons = def.N_buttons
+	} else {
+		n_buttons = 2
+		fmt.Print("Wrong use of Set_button_lamp_from_queue")
+	}
+
+	for f := 0; f < def.N_floors; f++ {
+		for btn := 0; btn < n_buttons; btn++ {
+
+			var button def.Order
+			button.Floor = f
+			button.Type = def.Button_type(btn)
+
+			Set_button_lamp(button, queue[f][btn])
+		}
+	}
+}
+
 func Set_floor_indicator(floor int) {
 	C.elev_set_floor_indicator(C.int(floor))
 }
@@ -104,6 +126,7 @@ func Elev_init_from_backup() def.Elevator {
 	elevator.Queue = queue.Queue_from_string(last_queue)
 	return elevator
 }
+
 
 func Safe_kill() {
 	var c = make(chan os.Signal)
