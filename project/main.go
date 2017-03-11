@@ -18,7 +18,11 @@ func main() {
 	door_timer := time.NewTimer(3 * time.Second)
 	door_timer.Stop()
 
-	elevator := driver.Elev_init()
+	if _, err := os.Stat("log.txt"); err == nil {
+  		elevator := driver.Elev_init_from_backup()
+	} else {
+		elevator := driver.Elev_init()
+	}
 
 	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
 
@@ -47,6 +51,7 @@ func main() {
 
 	go driver.Check_all_buttons(send_new_order)
 	go driver.Elevator_on_floor(on_floor, elevator)
+	go driver.Safe_kill()
 
 	for {
 		select {

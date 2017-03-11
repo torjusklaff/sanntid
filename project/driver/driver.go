@@ -7,6 +7,7 @@ package driver // where "driver" is the folder that contains io.go, io.c, io.h, 
 import "C"
 import def "../definitions"
 import "fmt"
+import "os"
 
 func Set_motor_direction(dirn def.Motor_direction) {
 	C.elev_set_motor_direction(C.elev_motor_direction_t(dirn))
@@ -95,4 +96,16 @@ func Elev_init_from_backup() def.Elevator {
 
 	last_queue := backup.Read_last_line(12)
 	elevator.Queue = Queue_from_string(last_queue)
+}
+
+func Safe_kill() {
+	var c = make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	<-c
+	var err = os.Remove("log.txt")
+	Set_motor_direction(def.Dir_stop)
+	if err != nil {
+        log.Fatalf("Error deleting file: %v", err)
+    }
+	log.Fatal("User terminated program.\n")
 }

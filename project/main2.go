@@ -11,6 +11,9 @@ import (
 	q "./queue"
 	"fmt"
 	"time"
+	"os"
+	"os/signal"
+	"log"
 )
 
 func main() {
@@ -38,6 +41,20 @@ func main() {
 	string_size := len(queue_string)
 	last_line := backup.Read_last_line(int64(string_size))
 	fmt.Print(last_line)
+
+	go func(){
+		var c = make(chan os.Signal)
+		signal.Notify(c, os.Interrupt)
+		<-c
+		fmt.Print("User terminated program.\n")
+		var err = os.Remove("log.txt")
+		if err != nil {
+	        log.Fatalf("Error deleting file: %v", err)
+	    }
+		log.Fatal("User terminated program.\n")
+	}()
+
+	for{}
 	//queue := q.Queue_from_string(last_line+"\n")
 	
 
