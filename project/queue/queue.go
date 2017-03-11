@@ -3,6 +3,7 @@ package queue
 import (
 	def "../definitions"
 	"fmt"
+	"../backup"
 )
 
 func requests_above(e def.Elevator) bool {
@@ -63,6 +64,7 @@ func Clear_at_floor(e *def.Elevator, floor int) {
 	for btn := 0; btn < def.N_buttons; btn++ {
 		e.Queue[floor][btn] = 0
 	}
+	Backup_internal_queue(*e)
 }
 
 
@@ -124,4 +126,16 @@ func Enqueue(e *def.Elevator, order def.Order) {
 	e.Queue[order.Floor][order.Type] = 1
 }
 
-func Update_global_queue(global_queue chan [][]int)
+func Update_global_queue(global_queue_chan chan [4][2]int, old_queue [4][2]int, new_order def.Order){
+	if new_order.Type == def.Buttoncall_internal{
+		global_queue_chan <- old_queue
+	} else {
+		old_queue[new_order.Floor][int(new_order.Type)] = 1
+		global_queue_chan <- old_queue
+	}
+}
+
+func Backup_internal_queue(elevator def.Elevator){
+	queue_string := Queue_to_string(elevator)
+	backup.To_backup(queue_string)
+}

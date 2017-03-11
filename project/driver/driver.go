@@ -7,12 +7,9 @@ package driver // where "driver" is the folder that contains io.go, io.c, io.h, 
 import "C"
 import def "../definitions"
 import "fmt"
-import "os"
 import (
 	"../backup"
 	"../queue"
-	"os/signal"
-	"log"
 )
 
 func Set_motor_direction(dirn def.Motor_direction) {
@@ -23,18 +20,9 @@ func Set_button_lamp(button def.Order, value int) {
 	C.elev_set_button_lamp(C.elev_button_type_t(button.Type), C.int(button.Floor), C.int(value))
 }
 
-func Set_button_lamp_from_queue(queue [][]int, global_or_internal string) {
-	if global_or_internal == "global"{
-		n_buttons = 2
-	} else if global_or_internal == "internal"{
-		n_buttons = def.N_buttons
-	} else {
-		n_buttons = 2
-		fmt.Print("Wrong use of Set_button_lamp_from_queue")
-	}
-
+func Set_button_lamp_from_internal_queue(queue [4][3]int) {
 	for f := 0; f < def.N_floors; f++ {
-		for btn := 0; btn < n_buttons; btn++ {
+		for btn := 0; btn < def.N_buttons; btn++ {
 
 			var button def.Order
 			button.Floor = f
@@ -44,6 +32,20 @@ func Set_button_lamp_from_queue(queue [][]int, global_or_internal string) {
 		}
 	}
 }
+
+func Set_button_lamp_from_global_queue(queue [4][2]int) {
+	for f := 0; f < def.N_floors; f++ {
+		for btn := 0; btn < 2; btn++ {
+
+			var button def.Order
+			button.Floor = f
+			button.Type = def.Button_type(btn)
+
+			Set_button_lamp(button, queue[f][btn])
+		}
+	}
+}
+
 
 func Set_floor_indicator(floor int) {
 	C.elev_set_floor_indicator(C.int(floor))
@@ -124,18 +126,13 @@ func Elev_init_from_backup() def.Elevator {
 
 	last_queue := backup.Read_last_line(12)
 	elevator.Queue = queue.Queue_from_string(last_queue)
+
+	first_direction := queue.Choose_direction(elevator)
+	Set_motor_direction(first_direction)
+	elevator.Current_direction = first_direction
+	if first_direction != def.Dir_stop{
+		elevator.Elevator_state = def.Moving
+	}
 	return elevator
 }
 
-
-func Safe_kill() {
-	var c = make(chan os.Signal)
-	signal.Notify(c, os.Interrupt)
-	<-c
-	var err = os.Remove("log.txt")
-	Set_motor_direction(def.Dir_stop)
-	if err != nil {
-        log.Fatalf("Error deleting file: %v", err)
-    }
-	log.Fatal("User terminated program.\n")
-}

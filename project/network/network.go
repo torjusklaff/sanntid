@@ -16,7 +16,7 @@ const (
 	send_order_port   = 20012
 	remove_order_port = 16572
 	send_cost_port    = 16573
-	backup_port       = 16574
+	global_queue_port = 16574
 	broadcast_time    = 1 * time.Second
 )
 
@@ -29,11 +29,13 @@ func Network_init(
 	receive_remover_order chan def.Order,
 	send_cost chan def.Cost,
 	send_new_order chan def.Order,
-	send_remove_order chan def.Order) {
+	send_remove_order chan def.Order,
+	send_global_queue chan [4][2]int, 
+	received_global_queue chan [4][2]int) {
 
 	go Peer_listener(id, n_elevators)
-	go Send_msg(id, send_cost, send_new_order, send_remove_order)
-	go Receive_msg(receive_cost, receive_new_order, receive_remover_order)
+	go Send_msg(id, send_cost, send_new_order, send_remove_order, send_global_queue)
+	go Receive_msg(receive_cost, receive_new_order, receive_remover_order, received_global_queue)
 }
 
 func Get_id() string {
@@ -74,15 +76,18 @@ func Send_msg(
 	localIP string,
 	send_cost chan def.Cost,
 	send_new_order chan def.Order,
-	send_remove_order chan def.Order) {
+	send_remove_order chan def.Order,
+	send_global_queue chan [4][2]int) {
 
 	bcast_send_cost := make(chan def.Cost)
 	bcast_send_new_order := make(chan def.Order)
 	bcast_send_remove_order := make(chan def.Order)
+	bcast_send_global_queue := make(chan [4][2]int)
 
 	go bcast.Transmitter(send_cost_port, bcast_send_cost)
 	go bcast.Transmitter(send_order_port, bcast_send_new_order)
 	go bcast.Transmitter(remove_order_port, bcast_send_remove_order)
+	go bcast.Transmitter(global_queue_port, bcast_send_global_queue)
 
 	for {
 		select {
@@ -95,6 +100,9 @@ func Send_msg(
 		case msg := <-send_remove_order:
 			sending := msg
 			bcast_send_remove_order <- sending
+		case msg := <-send_global_queue:
+			sending := msg
+			bcast_send_global_queue <- sending
 		}
 	}
 }
@@ -103,15 +111,18 @@ func Send_msg(
 func Receive_msg(
 	receive_cost chan def.Cost,
 	receive_new_order chan def.Order,
-	receive_remover_order chan def.Order) {
+	receive_remover_order chan def.Order,
+	received_global_queue chan [4][2]int) {
 
 	bcast_receive_cost := make(chan def.Cost)
 	bcast_receive_new_order := make(chan def.Order)
 	bcast_receive_remove_order := make(chan def.Order)
+	bcast_receive_global_queue := make(chan [4][2]int)
 
 	go bcast.Receiver(send_cost_port, bcast_receive_cost)
 	go bcast.Receiver(send_order_port, bcast_receive_new_order)
 	go bcast.Receiver(remove_order_port, bcast_receive_remove_order)
+	go bcast.Receiver(global_queue_port, bcast_receive_global_queue)
 
 	for {
 		select {
@@ -121,6 +132,8 @@ func Receive_msg(
 			receive_new_order <- msg
 		case msg := <-bcast_receive_remove_order:
 			receive_remover_order <- msg
+		case msg := <-bcast_receive_global_queue:
+			received_global_queue <- msg
 		}
 	}
 }

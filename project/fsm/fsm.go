@@ -35,6 +35,8 @@ func FSM_floor_arrival(new_floor int, elevator *def.Elevator, door_timer *time.T
 	}
 }
 
+
+
 func FSM_next_order(elevator *def.Elevator, next_order def.Order, door_timer *time.Timer, motor_timer *time.Timer) { //arbitrator decides where we should go next
 	driver.Set_button_lamp(next_order, 1)
 	
