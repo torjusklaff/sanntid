@@ -2,7 +2,7 @@ package queue
 
 import (
 	def "../definitions"
-	"fmt"
+	//"fmt"
 )
 
 func requests_above(e def.Elevator) bool {
@@ -65,6 +65,7 @@ func Clear_at_floor(e *def.Elevator, floor int) {
 	}
 }
 
+/* 											KAN FJERNES
 func Print_queue(e def.Elevator) {
 	for f := 0; f < def.N_floors; f++ {
 		for btn := 0; btn < def.N_buttons; btn++ {
@@ -74,6 +75,37 @@ func Print_queue(e def.Elevator) {
 	}
 	fmt.Printf("\n\n")
 }
+*/
+
+func Queue_to_string(e def.Elevator) string {
+	var queue_string string
+	var order_string string
+	for f := 0; f < def.N_floors; f++ {
+		for btn := 0; btn < def.N_buttons; btn++ {
+			if e.Queue[f][btn] == 1{
+				order_string = "1"
+			} else {
+				order_string = "0"
+			}
+			queue_string += order_string
+		}
+	}
+	return queue_string
+}
+
+func Queue_from_string(queue_string string) [4][3]int {
+	queue := [4][3]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
+	index := 0
+	for i:=0; i<4; i++{
+		for j:=0; j<3; j++{
+			queue[i][j] = int(queue_string[index])
+			index += 1
+		}
+	}
+	return queue
+}
+
+
 
 func Should_stop(e def.Elevator) bool {
 	switch e.Current_direction {

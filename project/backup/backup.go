@@ -6,7 +6,6 @@ import (
 )
 
 const filename = "log.txt"
-const string_size = 62 		// Leser fra og med size minus string_size (aka siste linje)
 
 func check_error(err error){
 	if err != nil {
@@ -24,8 +23,8 @@ func To_backup(str string) {
 	log.Println(str)
 }
 
-/*
-func Read_last_line() string {
+
+func Read_last_line(string_size int64) string {
 	f, err := os.Open(filename)
 	check_error(err)
 	defer f.Close()
@@ -33,7 +32,8 @@ func Read_last_line() string {
 	buf := make([]byte, string_size)
 	stat, err := os.Stat(filename)
 	start := stat.Size() - string_size
-	_, err = f.ReadAt(buf, start)
+	n, err := f.ReadAt(buf, start)
 	check_error(err)
+	buf = buf[:n]
+	return string(buf)
 }
-*/
