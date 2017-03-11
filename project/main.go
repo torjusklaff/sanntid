@@ -60,7 +60,7 @@ func main() {
 
 	id := net.Get_id()
 	go net.Network_init(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue)
-	go arb.Arbitrator_init(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // button_pressed må endres til receive_new_order
+	go arb.Arbitrator_init(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
 	go driver.Check_all_buttons(send_new_order)
 	go driver.Elevator_on_floor(on_floor, elevator)
@@ -81,6 +81,7 @@ func main() {
 		case new_order := <-assigned_new_order:
 			fmt.Print("Assigned new order\n")
 			queue.Backup_internal_queue(elevator)
+			queue.Enqueue(&elevator, new_order)
 			fsm.FSM_next_order(&elevator, new_order, door_timer, motor_stop_timer)
 			driver.Set_button_lamp_from_internal_queue(elevator.Queue)
 
@@ -92,6 +93,7 @@ func main() {
 			error_message := "MOTORSTOP"
 			error_handling <- error_message
 			elevator.Elevator_state = def.Motor_stop
+			fsm.FSM_motor_stop(&elevator)
 		
 		default:
 			break

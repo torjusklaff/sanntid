@@ -62,9 +62,11 @@ func Choose_direction(e def.Elevator) def.Motor_direction {
 
 func Clear_at_floor(e *def.Elevator, floor int) {
 	for btn := 0; btn < def.N_buttons; btn++ {
-		e.Queue[floor][btn] = 0
+		if e.Queue[floor][btn] == 1{
+			e.Queue[floor][btn] = 0
+			Backup_internal_queue(*e)
+		}
 	}
-	Backup_internal_queue(*e)
 }
 
 
@@ -120,6 +122,11 @@ func Should_stop(e def.Elevator) bool {
 		return true
 	}
 	return true
+}
+
+
+func Find_next_order(e def.Elevator) def.Order {
+	
 }
 
 func Enqueue(e *def.Elevator, order def.Order) {
