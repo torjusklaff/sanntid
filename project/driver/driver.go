@@ -6,15 +6,13 @@ package driver // where "driver" is the folder that contains io.go, io.c, io.h, 
 */
 import "C"
 import def "../definitions"
-import "time"
-
-//import "fmt"
+import "fmt"
 
 func Set_motor_direction(dirn def.Motor_direction) {
 	C.elev_set_motor_direction(C.elev_motor_direction_t(dirn))
 }
 
-func Set_button_lamp(button def.Order_button, value int) {
+func Set_button_lamp(button def.Order, value int) {
 	C.elev_set_button_lamp(C.elev_button_type_t(button.Type), C.int(button.Floor), C.int(value))
 }
 
@@ -26,13 +24,13 @@ func Set_door_open_lamp(value int) {
 	C.elev_set_door_open_lamp(C.int(value))
 }
 
-func Get_button_signal(button def.Order_button) int {
+func Get_button_signal(button def.Order) int {
 	return int(C.elev_get_button_signal(C.elev_button_type_t(button.Type), C.int(button.Floor)))
 }
 
-func Check_all_buttons(button_pressed chan def.Order_button) {
-	var pressed_button def.Order_button
-	var button_signal def.Order_button
+func Check_all_buttons(button_pressed chan def.Order) {
+	var pressed_button def.Order
+	var button_signal def.Order
 	for {
 		for floor := 0; floor < def.N_floors; floor++ {
 			for button := 0; button < def.N_buttons; button++ {
@@ -62,20 +60,23 @@ func Elevator_on_floor(on_floor chan int, elevator def.Elevator) {
 	}
 }
 
-func Door_open_close() {
-	Set_door_open_lamp(1)
-	door_timer := time.NewTimer(3 * time.Second)
-	<-door_timer.C
-	Set_door_open_lamp(0)
+func Clear_lights_at_floor(floor int) {
+	for btn := 0; btn < def.N_buttons; btn++ {
+		var button def.Order
+		button.Type = def.Button_type(btn)
+		button.Floor = floor
+		Set_button_lamp(button, 0)
+	}
 }
-
 func Elev_init() def.Elevator {
+	Set_motor_direction(def.Dir_stop)
 	C.elev_init()
 	//clear_all_lamps()
 
 	Set_motor_direction(def.Dir_down)
 	for Get_floor_sensor_signal() == -1 {
 	}
+	fmt.Printf("Found floor in init\n")
 	Set_motor_direction(def.Dir_stop)
 	Set_floor_indicator(Get_floor_sensor_signal())
 

@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	peer_port         = 15647
+	peer_port         = 20100
 	send_order_port   = 20012
 	remove_order_port = 16572
 	send_cost_port    = 16573
@@ -22,15 +22,14 @@ const (
 
 // Setter opp alle channels og funksjoner i en felles initialisering
 func Network_init(
+	id string,
 	n_elevators chan int,
 	receive_cost chan def.Cost,
-	receive_new_order chan def.Order_button,
-	receive_remover_order chan def.Order_button,
+	receive_new_order chan def.Order,
+	receive_remover_order chan def.Order,
 	send_cost chan def.Cost,
-	send_new_order chan def.Order_button,
-	send_remove_order chan def.Order_button) {
-
-	id := Get_id()
+	send_new_order chan def.Order,
+	send_remove_order chan def.Order) {
 
 	go Peer_listener(id, n_elevators)
 	go Send_msg(id, send_cost, send_new_order, send_remove_order)
@@ -64,6 +63,7 @@ func Peer_listener(id string, n_elevators chan int) {
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 			n_elevators <- len(p.Peers)
+			fmt.Printf("Number of active peers: %v \n", len(p.Peers))
 		}
 	}
 }
@@ -73,12 +73,12 @@ func Peer_listener(id string, n_elevators chan int) {
 func Send_msg(
 	localIP string,
 	send_cost chan def.Cost,
-	send_new_order chan def.Order_button,
-	send_remove_order chan def.Order_button) {
+	send_new_order chan def.Order,
+	send_remove_order chan def.Order) {
 
 	bcast_send_cost := make(chan def.Cost)
-	bcast_send_new_order := make(chan def.Order_button)
-	bcast_send_remove_order := make(chan def.Order_button)
+	bcast_send_new_order := make(chan def.Order)
+	bcast_send_remove_order := make(chan def.Order)
 
 	go bcast.Transmitter(send_cost_port, bcast_send_cost)
 	go bcast.Transmitter(send_order_port, bcast_send_new_order)
@@ -102,12 +102,12 @@ func Send_msg(
 // Setter opp channels som lytter etter msg fra Send_msg()		(se main fra network-modul)
 func Receive_msg(
 	receive_cost chan def.Cost,
-	receive_new_order chan def.Order_button,
-	receive_remover_order chan def.Order_button) {
+	receive_new_order chan def.Order,
+	receive_remover_order chan def.Order) {
 
 	bcast_receive_cost := make(chan def.Cost)
-	bcast_receive_new_order := make(chan def.Order_button)
-	bcast_receive_remove_order := make(chan def.Order_button)
+	bcast_receive_new_order := make(chan def.Order)
+	bcast_receive_remove_order := make(chan def.Order)
 
 	go bcast.Receiver(send_cost_port, bcast_receive_cost)
 	go bcast.Receiver(send_order_port, bcast_receive_new_order)
