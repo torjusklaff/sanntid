@@ -123,3 +123,5 @@ func Should_stop(e def.Elevator) bool {
 func Enqueue(e *def.Elevator, order def.Order) {
 	e.Queue[order.Floor][order.Type] = 1
 }
+
+func Update_global_queue(global_queue chan [][]int)

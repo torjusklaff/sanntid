@@ -39,12 +39,13 @@ func main() {
 	receive_cost := make(chan def.Cost)
 	receive_new_order := make(chan def.Order)
 	receive_remove_order := make(chan def.Order)
+	received_global_queue := make(chan [][]int)
 
 	send_cost := make(chan def.Cost)
 	send_new_order := make(chan def.Order)
 	send_remove_order := make(chan def.Order)
 	assigned_new_order := make(chan def.Order)
-	global_queue := make(chan [][]int)
+	send_global_queue := make(chan [][]int)
 
 	//button_pressed := make(chan def.Order)
 	on_floor := make(chan int)
@@ -66,13 +67,13 @@ func main() {
 		case <-door_timer.C:
 			fmt.Printf("Timer stopped\n")
 			fsm.FSM_on_door_timeout(&elevator)
+			case new_order := <-receive_new_order
 		case new_order := <-assigned_new_order:
 			fmt.Print("Assigned new order\n")
 			queue.Enqueue(&elevator, new_order)
 			fsm.FSM_next_order(&elevator, new_order, door_timer)
 			driver.Set_button_lamp_from_queue(elevator.Queue, "internal")
-		case queue_all := <-global_queue:
-			all_external_orders = queue_all
+		case all_external_orders = <-received_global_queue:
 			driver.Set_button_lamp_from_queue(all_external_orders, "global")
 		default:
 			break
