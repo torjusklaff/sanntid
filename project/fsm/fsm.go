@@ -9,9 +9,11 @@ import (
 	"time"
 )
 
-func FSM_floor_arrival(new_floor int, elevator *def.Elevator, door_timer *time.Timer, motor_timer *time.Timer) {
+func FSM_floor_arrival(new_floor int, elevator *def.Elevator) {
 	if new_floor == -1 {
+	} else if (new_floor == elevator.Last_floor){
 	} else {
+		fmt.Print("FSM_floor_arrival\n")
 		driver.Set_floor_indicator(new_floor)
 		elevator.Last_floor = new_floor
 		motor_timer.Stop()
@@ -23,7 +25,7 @@ func FSM_floor_arrival(new_floor int, elevator *def.Elevator, door_timer *time.T
 				driver.Clear_lights_at_floor(elevator.Last_floor)
 
 				driver.Set_door_open_lamp(1)
-				door_timer.Reset(3 * time.Second)
+				elevator.Door_timer.Reset(3 * time.Second)
 				fmt.Printf("Timer started\n")
 				elevator.Elevator_state = def.Stop_on_floor
 			}
@@ -37,7 +39,8 @@ func FSM_floor_arrival(new_floor int, elevator *def.Elevator, door_timer *time.T
 
 
 
-func FSM_next_order(elevator *def.Elevator, next_order def.Order, door_timer *time.Timer, motor_timer *time.Timer) { //arbitrator decides where we should go next
+func FSM_next_order(elevator *def.Elevator, next_order def.Order) { //arbitrator decides where we should go next
+	fmt.Print("FSM_next_order\n")
 	driver.Set_button_lamp(next_order, 1)
 	
 	switch elevator.Elevator_state {
@@ -46,11 +49,10 @@ func FSM_next_order(elevator *def.Elevator, next_order def.Order, door_timer *ti
 		if next_order.Floor == elevator.Last_floor {
 			queue.Clear_at_floor(elevator, elevator.Last_floor)
 			driver.Clear_lights_at_floor(elevator.Last_floor)
-			door_timer.Reset(3 * time.Second)
+			elevator.Door_timer.Reset(3 * time.Second)
 			driver.Set_door_open_lamp(1)
 			elevator.Elevator_state = def.Stop_on_floor
 		} else {
-
 			if next_order.Floor > elevator.Last_floor {
 				elevator.Current_direction = def.Dir_up
 				driver.Set_motor_direction(elevator.Current_direction)
@@ -64,7 +66,8 @@ func FSM_next_order(elevator *def.Elevator, next_order def.Order, door_timer *ti
 			elevator.Elevator_state = def.Idle
 		} else {
 			elevator.Elevator_state = def.Moving
-			motor_timer.Reset(8*time.Second)
+			elevator.Motor_stop_timer.Reset(4*time.Second)
+			fmt.Print("FSM_next_order: Reset motor_timer\n")
 		}
 	case def.Moving:
 	case def.Stop_on_floor:
@@ -81,7 +84,8 @@ func FSM_next_order(elevator *def.Elevator, next_order def.Order, door_timer *ti
 	queue.Print_queue(*elevator)
 }
 
-func FSM_on_door_timeout(elevator *def.Elevator, motor_timer *time.Timer) {
+func FSM_on_door_timeout(elevator *def.Elevator) {
+	fmt.Print("FSM_on_door_timeout\n")
 	queue.Print_queue(*elevator)
 	driver.Set_door_open_lamp(0)
 	switch elevator.Elevator_state {
@@ -93,9 +97,9 @@ func FSM_on_door_timeout(elevator *def.Elevator, motor_timer *time.Timer) {
 			elevator.Elevator_state = def.Idle
 		} else {
 			elevator.Elevator_state = def.Moving
-			motor_timer.Reset(8*time.Second)
+			elevator.Motor_stop_timer.Reset(4*time.Second)
+			fmt.Print("FSM_on_door_timeout: Reset motor_timer")
 		}
-
 		break
 	default:
 		break
@@ -103,8 +107,16 @@ func FSM_on_door_timeout(elevator *def.Elevator, motor_timer *time.Timer) {
 }
 
 func FSM_motor_stop(elevator *def.Elevator){
+	fmt.Print("FSM_motor_stop\n")
 	elevator.Current_direction = def.Dir_stop
 	driver.Set_motor_direction(def.Dir_stop)
-	
 
+	dead := true
+	for dead{
+		driver.Set_motor_direction(def.Dir_down)
+		if driver.Get_floor_sensor_signal() != -1 {
+			dead = false
+			FSM_on_door_timeout(elevator, )
+		}
+	}
 }

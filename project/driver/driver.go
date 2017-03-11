@@ -7,6 +7,7 @@ package driver // where "driver" is the folder that contains io.go, io.c, io.h, 
 import "C"
 import def "../definitions"
 import "fmt"
+import "time"
 import (
 	"../backup"
 	"../queue"
@@ -112,11 +113,18 @@ func Elev_init() def.Elevator {
 	Set_floor_indicator(Get_floor_sensor_signal())
 
 	// Initializing an elevator-object
+	door_timer := time.NewTimer(3 * time.Second)
+	door_timer.Stop()
+	motor_stop_timer := time.NewTimer(10 * time.Second)
+	motor_stop_timer.Stop()
+
 	var elev def.Elevator
 	elev.Last_floor = Get_floor_sensor_signal()
 	elev.Current_direction = def.Dir_stop
 	elev.Queue = [4][3]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
 	elev.Elevator_state = def.Idle
+	elev.Door_timer = door_timer
+	elev.Motor_stop_timer = motor_stop_timer
 
 	return elev
 }

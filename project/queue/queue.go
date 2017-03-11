@@ -125,10 +125,6 @@ func Should_stop(e def.Elevator) bool {
 }
 
 
-func Find_next_order(e def.Elevator) def.Order {
-	
-}
-
 func Enqueue(e *def.Elevator, order def.Order) {
 	e.Queue[order.Floor][order.Type] = 1
 }

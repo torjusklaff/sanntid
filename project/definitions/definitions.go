@@ -56,6 +56,8 @@ type Elevator struct {
 	Queue             [N_floors][N_buttons]int
 	Elevator_state    Elev_states
 	Id                string
+	Door_timer 			*time.Timer
+	Motor_stop_timer 	*time.Timer
 }
 
 type Cost struct {
