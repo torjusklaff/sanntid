@@ -25,6 +25,7 @@ func To_backup(str string) {
 
 
 func Read_last_line(string_size int64) string {
+	string_size += 1
 	f, err := os.Open(filename)
 	check_error(err)
 	defer f.Close()

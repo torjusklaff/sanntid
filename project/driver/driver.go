@@ -89,3 +89,10 @@ func Elev_init() def.Elevator {
 
 	return elev
 }
+
+func Elev_init_from_backup() def.Elevator {
+	elevator := Elev_init()
+
+	last_queue := backup.Read_last_line(12)
+	elevator.Queue = Queue_from_string(last_queue)
+}

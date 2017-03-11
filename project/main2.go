@@ -35,10 +35,10 @@ func main() {
 	queue_string := q.Queue_to_string(elevator)
 	backup.To_backup(queue_string)
 
-	string_size := len(queue_string)+1
+	string_size := len(queue_string)
 	last_line := backup.Read_last_line(int64(string_size))
 	fmt.Print(last_line)
-	queue := q.Queue_from_string(last_line+"\n")
+	//queue := q.Queue_from_string(last_line+"\n")
 	
 
 
