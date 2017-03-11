@@ -11,17 +11,19 @@ import (
 	"./queue"
 	"fmt"
 	"time"
+	"os"
 )
 
 func main() {
 
 	door_timer := time.NewTimer(3 * time.Second)
 	door_timer.Stop()
-
+	
+	var elevator def.Elevator
 	if _, err := os.Stat("log.txt"); err == nil {
-  		elevator := driver.Elev_init_from_backup()
+  		elevator = driver.Elev_init_from_backup()
 	} else {
-		elevator := driver.Elev_init()
+		elevator = driver.Elev_init()
 	}
 
 	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())

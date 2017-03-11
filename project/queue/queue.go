@@ -2,7 +2,7 @@ package queue
 
 import (
 	def "../definitions"
-	//"fmt"
+	"fmt"
 )
 
 func requests_above(e def.Elevator) bool {
@@ -65,7 +65,7 @@ func Clear_at_floor(e *def.Elevator, floor int) {
 	}
 }
 
-/* 											KAN FJERNES
+
 func Print_queue(e def.Elevator) {
 	for f := 0; f < def.N_floors; f++ {
 		for btn := 0; btn < def.N_buttons; btn++ {
@@ -75,7 +75,7 @@ func Print_queue(e def.Elevator) {
 	}
 	fmt.Printf("\n\n")
 }
-*/
+
 
 func Queue_to_string(e def.Elevator) string {
 	var queue_string string

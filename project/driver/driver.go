@@ -8,6 +8,12 @@ import "C"
 import def "../definitions"
 import "fmt"
 import "os"
+import (
+	"../backup"
+	"../queue"
+	"os/signal"
+	"log"
+)
 
 func Set_motor_direction(dirn def.Motor_direction) {
 	C.elev_set_motor_direction(C.elev_motor_direction_t(dirn))
@@ -95,7 +101,8 @@ func Elev_init_from_backup() def.Elevator {
 	elevator := Elev_init()
 
 	last_queue := backup.Read_last_line(12)
-	elevator.Queue = Queue_from_string(last_queue)
+	elevator.Queue = queue.Queue_from_string(last_queue)
+	return elevator
 }
 
 func Safe_kill() {
