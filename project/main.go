@@ -8,7 +8,7 @@ import (
 	def "./definitions"
 	"./fsm"
 	net "./network"
-	"./queue"
+	//"./queue"
 	"fmt"
 	"time"
 )
@@ -17,7 +17,8 @@ func main() {
 
 	door_timer := time.NewTimer(3 * time.Second)
 	door_timer.Stop()
-
+	motor_stop_timer := time.NewTimer(10 * time.Second)
+	motor_stop_timer.Stop()
 	elevator := driver.Elev_init()
 
 	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
@@ -28,7 +29,7 @@ func main() {
 
 	// 	CHANNELS
 	n_elevators := make(chan int)
-
+	error_handling := make(chan string)
 	receive_cost := make(chan def.Cost)
 	receive_new_order := make(chan def.Order)
 	receive_remove_order := make(chan def.Order)
@@ -51,14 +52,19 @@ func main() {
 	for {
 		select {
 		case floor := <-on_floor:
-			fsm.FSM_floor_arrival(floor, &elevator, door_timer)
+			fsm.FSM_floor_arrival(floor, &elevator, door_timer, motor_stop_timer)
 		case <-door_timer.C:
 			fmt.Printf("Timer stopped\n")
-			fsm.FSM_on_door_timeout(&elevator)
+			fsm.FSM_on_door_timeout(&elevator, motor_stop_timer)
 		case new_order := <-assigned_new_order:
 			fmt.Print("Assigned new order\n")
-			queue.Enqueue(&elevator, new_order)
-			fsm.FSM_next_order(&elevator, new_order, door_timer)
+			
+			fsm.FSM_next_order(&elevator, new_order, door_timer, motor_stop_timer)
+		case <-motor_stop_timer.C:
+			error_message := "MOTORSTOP"
+			error_handling <- error_message
+			elevator.Elevator_state = def.Motor_stop
+			
 		default:
 			break
 		}

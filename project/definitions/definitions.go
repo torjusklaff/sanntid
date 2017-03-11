@@ -35,6 +35,7 @@ const (
 	Idle          Elev_states = iota
 	Stop_on_floor             //Not really necessary, look into it (Change to On_floor)
 	Moving
+	Motor_stop
 )
 
 type Elevator struct {
