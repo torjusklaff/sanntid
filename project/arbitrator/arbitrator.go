@@ -56,13 +56,15 @@ func Arbitrator_init(
 			fmt.Printf("Number of elevators: %v \n", n_elevators)
 		case current_new_order := <-receive_new_order:
 			fmt.Printf("We receive a new order\n")
-			if current_new_order.Type == def.Buttoncall_internal {
+			if (current_new_order.Type == def.Buttoncall_internal) || (n_elevators == 1) {
 				assigned_new_order <- current_new_order
 			} else {
 				current_cost := def.Cost{Cost: cost_function(e, current_new_order), Current_order: current_new_order, Id: localIP}
+				send_cost <- current_cost
 				order_selection(assigned_new_order, receive_cost, n_elevators, current_cost, localIP)
+				//if current_new_order.Floor == 3 || current_new_order.Type == def.Buttoncall_up {
+				//	assigned_new_order <- current_new_order
 			}
-
 		}
 	}
 }

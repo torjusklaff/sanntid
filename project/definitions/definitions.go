@@ -1,6 +1,9 @@
 package definitions
 
-import "time"
+import (
+	"os/exec"
+	"time"
+)
 
 const (
 	N_floors    = 4

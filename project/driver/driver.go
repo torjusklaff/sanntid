@@ -56,7 +56,7 @@ func Get_button_signal(button def.Order) int {
 	return int(C.elev_get_button_signal(C.elev_button_type_t(button.Type), C.int(button.Floor)))
 }
 
-func Check_all_buttons(button_pressed chan def.Order) {
+func Check_all_buttons(external_button_pressed chan def.Order, internal_button_pressed chan def.Order) {
 	var pressed_button def.Order
 	var button_signal def.Order
 	for {
@@ -68,8 +68,11 @@ func Check_all_buttons(button_pressed chan def.Order) {
 				if Get_button_signal(button_signal) == 1 {
 					pressed_button.Type = def.Button_type(button)
 					pressed_button.Floor = floor
-
-					button_pressed <- pressed_button
+					if pressed_button.Type == def.Buttoncall_internal {
+						internal_button_pressed <- pressed_button
+					} else {
+						external_button_pressed <- pressed_button
+					}
 				}
 			}
 		}
@@ -83,6 +86,7 @@ func Get_floor_sensor_signal() int {
 func Elevator_on_floor(on_floor chan int, elevator def.Elevator) {
 	for {
 		if (Get_floor_sensor_signal() != elevator.Last_floor) && (Get_floor_sensor_signal() != -1) {
+
 			on_floor <- Get_floor_sensor_signal()
 		}
 	}

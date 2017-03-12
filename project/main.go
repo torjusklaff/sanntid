@@ -21,7 +21,7 @@ func main() {
 	all_external_orders := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 
 	test_timer := time.NewTimer(1 * time.Second)
-	test_timer.Stop()
+	//test_timer.Stop()
 
 	var elevator def.Elevator
 	if _, err := os.Stat("log.txt"); err == nil {
@@ -56,28 +56,32 @@ func main() {
 	assigned_new_order := make(chan def.Order)
 	send_global_queue := make(chan [4][2]int)
 
-	on_floor := make(chan int)
+	on_floor := pollFloors()
+	error_handling := make(chan string)
 
 	id := net.Get_id()
 
-	go net.Network_init(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue)
+	go net.NetworkInit(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue)
 	go arb.Arbitrator_init(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
-	go driver.Check_all_buttons(send_new_order)
-	go driver.Elevator_on_floor(on_floor, elevator)
-	go Safe_kill()
+	go driver.Check_all_buttons(send_new_order, assigned_new_order)
+	//go driver.Elevator_on_floor(on_floor, elevator)
+
+	go SafeKill()
 
 	test_it := 0
-
+	floor_sense := 0
 	for {
 		test_it += 1
+		if sensor := driver.Get_floor_sensor_signal(); sensor != -1 {
+			floor_sense = sensor
+		}
 		if test_it == 500000 {
 			backup.Backup_internal_queue(elevator)
 			driver.Set_button_lamp_from_internal_queue(elevator.Queue)
 			driver.Set_button_lamp_from_global_queue(all_external_orders)
 			test_it = 0
 		}
-
 		select {
 		case floor := <-on_floor:
 			fsm.FSM_floor_arrival(floor, &elevator)
@@ -118,22 +122,47 @@ func main() {
 			if err == "PROGRAM_CRASH" {
 				def.Restart.Run()
 			}
+		case <-test_timer.C:
 
+			fmt.Printf("Current floor: %v \t Floor sensor: %v\n", elevator.Last_floor, floor_sense)
+			test_timer.Reset(1 * time.Second)
 		default:
 			break
 		}
 	}
 }
 
-func Safe_kill() {
+func SafeKill() {
 	var c = make(chan os.Signal)
 	signal.Notify(c, os.Interrupt)
 	<-c
 	var err = os.Remove("log.txt")
 	fmt.Print("User terminated program.\n\n")
 	driver.Set_motor_direction(def.Dir_stop)
+
+	for i := 0; i < def.N_floors; i++ {
+		driver.Clear_lights_at_floor(i)
+	}
+
 	if err != nil {
 		log.Fatalf("Error deleting file: %v", err)
 	}
 	log.Fatal("\nUser terminated program.\n")
+
+}
+func pollFloors() <-chan int {
+	c := make(chan int)
+	go func() {
+		oldFloor := driver.Get_floor_sensor_signal()
+
+		for {
+			newFloor := driver.Get_floor_sensor_signal()
+			if newFloor != oldFloor && newFloor != -1 {
+				c <- newFloor
+			}
+			oldFloor = newFloor
+			time.Sleep(time.Millisecond)
+		}
+	}()
+	return c
 }
