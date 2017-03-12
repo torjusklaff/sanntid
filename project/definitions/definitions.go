@@ -30,17 +30,10 @@ type Order struct {
 	Floor    int
 	Internal bool
 	Id       string
+	Timer 	 *time.Timer
 }
 
-func Order_to_string(order Order) string{
-	var intern string
-	if order.Internal == true{
-		intern = "true"
-	} else {
-		intern = "false"
-	}
-	return "Type: "+string(order.Type)+"  Floor: "+string(order.Floor)+"  Internal: "+intern+"  Id: "+order.Id
-}
+
 
 type Elev_states int
 
