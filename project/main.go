@@ -16,6 +16,10 @@ import (
 	"time"
 )
 
+var cost_chan = make(chan def.Cost)
+var num_online int
+
+
 func main() {
 	all_external_orders := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 
@@ -63,7 +67,8 @@ func main() {
 
 	id := net.Get_id()
 	go net.Network_init(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue)
-	go arb.Arbitrator_init(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
+	//go arb.Arbitrator_init(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
+	go arb.Arbitrator.run(cost_chan, &num_online)
 
 	go driver.Check_all_buttons(send_new_order)
 	go driver.Elevator_on_floor(on_floor, elevator)

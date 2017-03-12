@@ -19,7 +19,7 @@ type order struct {
 }
 
 
-func Arbitrator.run(cost_reply chan def.Cost, n_elevators *int){
+func Run(cost_reply chan def.Cost, n_elevators *int){
 	unassigned := make(map[order][]reply)
 	var timeout = make(chan *def.Order)
 
