@@ -49,19 +49,21 @@ func main() {
 	receive_new_order := make(chan def.Order)
 	receive_remove_order := make(chan def.Order)
 	received_global_queue := make(chan [4][2]int)
+	received_states := make(chan def.Elevator)
 
 	send_cost := make(chan def.Cost)
 	send_new_order := make(chan def.Order)
 	send_remove_order := make(chan def.Order)
 	assigned_new_order := make(chan def.Order)
 	send_global_queue := make(chan [4][2]int)
+	send_states := make(chan def.Elevator)
 
 	on_floor := pollFloors()
 	error_handling := make(chan string)
 
 	id := net.GetId()
 
-	go net.NetworkInit(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue)
+	go net.NetworkInit(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue, send_states, received_states)
 	go arb.ArbitratorInit(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
 	go driver.CheckAllButtons(send_new_order, assigned_new_order)
@@ -88,7 +90,7 @@ func main() {
 
 		case <-elevator.Door_timer.C:
 			fmt.Printf("Timer stopped\n")
-			queue.ClearGlobalQueue(send_global_queue, all_external_orders, elevator.Last_floor)
+			//queue.ClearGlobalQueue(send_global_queue, all_external_orders, elevator.Last_floor)
 			fsm.FsmOnDoorTimeout(&elevator)
 
 		case new_order := <-receive_new_order:

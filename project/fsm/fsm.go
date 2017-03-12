@@ -69,6 +69,7 @@ func FsmNextOrder(elevator *def.Elevator, next_order def.Order) { //arbitrator d
 	case def.Stop_on_floor:
 		queue.ClearAtFloor(elevator, elevator.Last_floor)
 		driver.ClearLightsAtFloor(elevator.Last_floor)
+		elevator.Door_timer.Reset(3 * time.Second)
 	case def.Motor_stop:
 		if next_order.Type == def.Buttoncall_internal {
 			queue.Enqueue(elevator, next_order)
