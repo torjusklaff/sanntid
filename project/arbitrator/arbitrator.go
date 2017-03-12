@@ -43,11 +43,12 @@ func ArbitratorInit(
 	localIP string,
 	receive_new_order chan def.Order,
 	assigned_new_order chan def.Order,
-	receive_cost chan def.Cost,
-	send_cost chan def.Cost,
+	received_states chan def.Elevator,
+	send_states chan def.Elevator,
 	number_of_connected_elevators chan int) {
 
-	var n_elevators int
+	elev_states := make(map[string][]def.Elevator)
+	n_elevators := 1
 
 	for {
 		select {
@@ -56,15 +57,17 @@ func ArbitratorInit(
 			fmt.Printf("Number of elevators: %v \n", n_elevators)
 		case current_new_order := <-receive_new_order:
 			fmt.Printf("We receive a new order\n")
+			send_states <- e
 			if (current_new_order.Type == def.Buttoncall_internal) || (n_elevators == 1) {
 				assigned_new_order <- current_new_order
 			} else {
-				current_cost := def.Cost{Cost: costFunction(e, current_new_order), Current_order: current_new_order, Id: localIP}
-				send_cost <- current_cost
-				orderSelection(assigned_new_order, receive_cost, n_elevators, current_cost, localIP)
+				//current_cost := def.Cost{Cost: costFunction(e, current_new_order), Current_order: current_new_order, Id: localIP}
+				//orderSelection(assigned_new_order, receive_cost, n_elevators, current_cost, localIP)
 				//if current_new_order.Floor == 3 || current_new_order.Type == def.Buttoncall_up {
 				//	assigned_new_order <- current_new_order
 			}
+		case new_states := <-received_states:
+			elev_states[new_states.Id] = append(elev_states[new_states.Id], new_states)
 		}
 	}
 }
@@ -83,7 +86,7 @@ func orderSelection(
 		cost_list[i] = def.Cost{math.Inf(+1), current_cost.Current_order, current_cost.Id}
 	}
 
-	switch n_elevators {
+	/*switch n_elevators {
 	case 1:
 		cost_list[0] = current_cost
 	case 2:
@@ -96,7 +99,7 @@ func orderSelection(
 		cost_list[0] = current_cost
 		cost_list[1] = new_cost
 		cost_list[2] = new_cost2
-	}
+	}*/
 
 	// regner ut laveste kost av de aktive heisene
 	lowest_cost := findLowestCost(cost_list)
