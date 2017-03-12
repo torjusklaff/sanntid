@@ -1,7 +1,9 @@
 package definitions
 
-import "time"
-
+import (
+	"time"
+	"os/exec"
+)
 
 const (
 	N_floors    = 4
@@ -60,3 +62,14 @@ type Cost struct {
 }
 
 const Order_time_out = 10*time.Second
+
+var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main")
+
+// TEST FOR ARBITRATOR
+type Message struct {
+	Category int
+	Floor    int
+	Button   int
+	Cost     int
+	Addr     string `json:"-"`
+}

@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-var cost_chan = make(chan def.Cost)
+var cost_chan = make(chan def.Message)
 var num_online int
 
 
@@ -47,7 +47,7 @@ func main() {
 	// 	CHANNELS
 	n_elevators := make(chan int)
 
-	//error_handling := make(chan string)
+	error_handling := make(chan string)
 
 	receive_cost := make(chan def.Cost)
 	receive_new_order := make(chan def.Order)
@@ -68,7 +68,7 @@ func main() {
 	id := net.Get_id()
 	go net.Network_init(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue)
 	//go arb.Arbitrator_init(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
-	go arb.Arbitrator.run(cost_chan, &num_online)
+	go arb.Arbitrator_run(&elevator, cost_chan, &num_online, id, assigned_new_order)
 
 	go driver.Check_all_buttons(send_new_order)
 	go driver.Elevator_on_floor(on_floor, elevator)
@@ -108,17 +108,23 @@ func main() {
 
 		case <-elevator.Motor_stop_timer.C:
 			fmt.Print("main: detected motor_stop\n")
-			elevator = fsm.FSM_motor_stop(&elevator)
-
-			var dummy_order def.Order
-	  		dummy_order.Floor = 1
-	  		dummy_order.Type = def.Buttoncall_internal
-	  		fsm.FSM_next_order(&elevator, dummy_order)
-
-
-			/*error_message := "MOTORSTOP"
+			error_message := "MOTORSTOP"
 			error_handling <- error_message
-			elevator.Elevator_state = def.Motor_stop*/
+			elevator.Elevator_state = def.Motor_stop
+
+		case err := <-error_handling:
+			if err == "MOTORSTOP"{
+				elevator = fsm.FSM_motor_stop(&elevator)
+
+				var dummy_order def.Order
+		  		dummy_order.Floor = 1
+		  		dummy_order.Type = def.Buttoncall_internal
+		  		
+		  		fsm.FSM_next_order(&elevator, dummy_order)
+			}
+			if err == "PROGRAM_CRASH"{
+				def.Restart.Run()
+			}
 
 		default:
 			break
