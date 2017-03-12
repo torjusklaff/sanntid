@@ -53,9 +53,16 @@ func Arbitrator_init(
 		select {
 		case elevators := <-number_of_connected_elevators:
 			n_elevators = elevators
+			fmt.Printf("Number of elevators: %v \n", n_elevators)
 		case current_new_order := <-receive_new_order:
-			current_cost := def.Cost{Cost: cost_function(e, current_new_order), Current_order: current_new_order, Id: localIP}
-			order_selection(assigned_new_order, receive_cost, n_elevators, current_cost, localIP)
+			fmt.Printf("We receive a new order\n")
+			if current_new_order.Type == def.Buttoncall_internal {
+				assigned_new_order <- current_new_order
+			} else {
+				current_cost := def.Cost{Cost: cost_function(e, current_new_order), Current_order: current_new_order, Id: localIP}
+				order_selection(assigned_new_order, receive_cost, n_elevators, current_cost, localIP)
+			}
+
 		}
 	}
 }
@@ -95,6 +102,7 @@ func order_selection(
 	// sender
 	if lowest_cost.Id == localIP {
 		assigned_new_order <- current_cost.Current_order
+		fmt.Printf("We took the order!\n")
 	} else {
 		fmt.Printf("Someone else took the order\n")
 	}

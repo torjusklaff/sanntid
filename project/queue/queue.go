@@ -1,9 +1,9 @@
 package queue
 
 import (
+	"../backup"
 	def "../definitions"
 	"fmt"
-	"../backup"
 )
 
 func requests_above(e def.Elevator) bool {
@@ -62,22 +62,21 @@ func Choose_direction(e def.Elevator) def.Motor_direction {
 
 func Clear_at_floor(e *def.Elevator, floor int) {
 	for btn := 0; btn < def.N_buttons; btn++ {
-		if e.Queue[floor][btn] == 1{
+		if e.Queue[floor][btn] == 1 {
 			e.Queue[floor][btn] = 0
 			backup.Backup_internal_queue(*e)
 		}
 	}
 }
 
-func Clear_global_queue(send_global_queue chan [4][2]int, old_queue [4][2]int, floor int){
+func Clear_global_queue(send_global_queue chan [4][2]int, old_queue [4][2]int, floor int) {
 	for btn := 0; btn < 2; btn++ {
-		if old_queue[floor][btn] == 1{
+		if old_queue[floor][btn] == 1 {
 			old_queue[floor][btn] = 0
 		}
 	}
 	send_global_queue <- old_queue
 }
-
 
 func Print_queue(e def.Elevator) {
 	for f := 0; f < def.N_floors; f++ {
@@ -88,14 +87,12 @@ func Print_queue(e def.Elevator) {
 	}
 }
 
-
-
 func Should_stop(e def.Elevator) bool {
 	switch e.Current_direction {
 	case def.Dir_down:
-		return (e.Queue[e.Last_floor][def.Buttoncall_down] == 1) || (e.Queue[e.Last_floor][def.Buttoncall_internal] == 1) || !requests_below(e)
+		return (e.Queue[e.Last_floor][def.Buttoncall_down] == 1) || (e.Queue[e.Last_floor][def.Buttoncall_internal] == 1) || !requests_below(e) || e.Last_floor == 0
 	case def.Dir_up:
-		return (e.Queue[e.Last_floor][def.Buttoncall_up] == 1) || (e.Queue[e.Last_floor][def.Buttoncall_internal] == 1) || !requests_above(e)
+		return (e.Queue[e.Last_floor][def.Buttoncall_up] == 1) || (e.Queue[e.Last_floor][def.Buttoncall_internal] == 1) || !requests_above(e) || e.Last_floor == 3
 	case def.Dir_stop:
 	default:
 		return true
@@ -103,18 +100,16 @@ func Should_stop(e def.Elevator) bool {
 	return true
 }
 
-
 func Enqueue(e *def.Elevator, order def.Order) {
 	e.Queue[order.Floor][order.Type] = 1
 	backup.Backup_internal_queue(*e)
 }
 
-func Update_global_queue(global_queue_chan chan [4][2]int, old_queue [4][2]int, new_order def.Order){
-	if new_order.Type == def.Buttoncall_internal{
+func Update_global_queue(global_queue_chan chan [4][2]int, old_queue [4][2]int, new_order def.Order) {
+	if new_order.Type == def.Buttoncall_internal {
 		global_queue_chan <- old_queue
 	} else {
 		old_queue[new_order.Floor][int(new_order.Type)] = 1
 		global_queue_chan <- old_queue
 	}
 }
-

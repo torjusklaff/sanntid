@@ -2,7 +2,6 @@ package definitions
 
 import "time"
 
-
 const (
 	N_floors    = 4
 	N_buttons   = 3
@@ -32,14 +31,14 @@ type Order struct {
 	Id       string
 }
 
-func Order_to_string(order Order) string{
+func Order_to_string(order Order) string {
 	var intern string
-	if order.Internal == true{
+	if order.Internal == true {
 		intern = "true"
 	} else {
 		intern = "false"
 	}
-	return "Type: "+string(order.Type)+"  Floor: "+string(order.Floor)+"  Internal: "+intern+"  Id: "+order.Id
+	return "Type: " + string(order.Type) + "  Floor: " + string(order.Floor) + "  Internal: " + intern + "  Id: " + order.Id
 }
 
 type Elev_states int
@@ -57,8 +56,9 @@ type Elevator struct {
 	Queue             [N_floors][N_buttons]int
 	Elevator_state    Elev_states
 	Id                string
-	Door_timer 			*time.Timer
-	Motor_stop_timer 	*time.Timer
+	Door_timer        *time.Timer
+	Motor_stop_timer  *time.Timer
+	Current_order     Order
 }
 
 type Cost struct {
@@ -66,3 +66,5 @@ type Cost struct {
 	Current_order Order
 	Id            string
 }
+
+var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main")

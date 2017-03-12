@@ -10,7 +10,6 @@ import "fmt"
 import "time"
 import "../backup"
 
-
 func Set_motor_direction(dirn def.Motor_direction) {
 	C.elev_set_motor_direction(C.elev_motor_direction_t(dirn))
 }
@@ -44,7 +43,6 @@ func Set_button_lamp_from_global_queue(queue [4][2]int) {
 		}
 	}
 }
-
 
 func Set_floor_indicator(floor int) {
 	C.elev_set_floor_indicator(C.int(floor))
@@ -109,7 +107,7 @@ func Elev_init() def.Elevator {
 	it := 0
 	for Get_floor_sensor_signal() == -1 {
 		it += 1
-		if it == 100000{
+		if it == 100000 {
 			Set_motor_direction(def.Dir_up)
 		}
 	}
@@ -133,7 +131,6 @@ func Elev_init() def.Elevator {
 
 	return elev
 }
-
 
 func Elev_init_from_backup() def.Elevator {
 	elev := Elev_init()
