@@ -40,9 +40,6 @@ func main() {
 
 	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
 
-	var previous_order def.Order
-	previous_order.Type = def.Buttoncall_internal
-	previous_order.Floor = elevator.Last_floor
 
 	// 	CHANNELS
 	n_elevators := make(chan int)
@@ -60,16 +57,36 @@ func main() {
 	assigned_new_order := make(chan def.Order)
 	send_global_queue := make(chan [4][2]int)
 
+	handled_order := make(chan def.Order)
+	send_handled_order := make(chan def.Order)
+	receive_handled_order := make(chan def.Order)
+	new_order := make(chan def.Order)
+
 	//button_pressed := make(chan def.Order)
 	on_floor := make(chan int)
 
 
 
 	id := net.Get_id()
-	go net.Network_init(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue)
-	//go arb.Arbitrator_init(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
-	go arb.Arbitrator_run(&elevator, cost_chan, &num_online, id, assigned_new_order)
-
+	go net.Network_init(id, 
+		n_elevators, 
+		receive_cost, 
+		receive_new_order, 
+		receive_remove_order, 
+		send_cost, 
+		send_new_order, 
+		send_remove_order, 
+		send_global_queue, 
+		received_global_queue)
+	
+	go arb.Arbitrator_init(elevator, 
+		id, 
+		receive_new_order, 
+		assigned_new_order, 
+		receive_cost, 
+		send_cost, 
+		n_elevators) 			// MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
+	
 	go driver.Check_all_buttons(send_new_order)
 	go driver.Elevator_on_floor(on_floor, elevator)
 	go Safe_kill()
@@ -119,7 +136,7 @@ func main() {
 				var dummy_order def.Order
 		  		dummy_order.Floor = 1
 		  		dummy_order.Type = def.Buttoncall_internal
-		  		
+
 		  		fsm.FSM_next_order(&elevator, dummy_order)
 			}
 			if err == "PROGRAM_CRASH"{

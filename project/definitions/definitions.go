@@ -46,17 +46,18 @@ const (
 )
 
 type Elevator struct {
-	Last_floor        int
-	Current_direction Motor_direction
-	Queue             [N_floors][N_buttons]int
-	Elevator_state    Elev_states
-	Id                string
+	Last_floor 			int
+	Current_direction 	Motor_direction
+	Queue             	[N_floors][N_buttons]int
+	Elevator_state    	Elev_states
+	Id                	string
 	Door_timer 			*time.Timer
 	Motor_stop_timer 	*time.Timer
+	Current_order 		Order
 }
 
 type Cost struct {
-	Cost          float64
+	Cost          int
 	Current_order Order
 	Id            string
 }
@@ -65,11 +66,3 @@ const Order_time_out = 10*time.Second
 
 var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main")
 
-// TEST FOR ARBITRATOR
-type Message struct {
-	Category int
-	Floor    int
-	Button   int
-	Cost     int
-	Addr     string `json:"-"`
-}

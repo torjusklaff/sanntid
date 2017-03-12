@@ -33,6 +33,8 @@ func Network_init(
 	send_global_queue chan [4][2]int, 
 	received_global_queue chan [4][2]int) {
 
+	
+
 	go Peer_listener(id, n_elevators)
 	go Send_msg(id, send_cost, send_new_order, send_remove_order, send_global_queue)
 	go Receive_msg(receive_cost, receive_new_order, receive_remover_order, received_global_queue)
