@@ -30,7 +30,6 @@ type Order struct {
 	Floor    int
 	Internal bool
 	Id       string
-	Timer 	 *time.Timer
 }
 
 
@@ -59,3 +58,5 @@ type Cost struct {
 	Current_order Order
 	Id            string
 }
+
+const Order_time_out = 10*time.Second
