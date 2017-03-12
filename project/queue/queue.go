@@ -64,9 +64,18 @@ func Clear_at_floor(e *def.Elevator, floor int) {
 	for btn := 0; btn < def.N_buttons; btn++ {
 		if e.Queue[floor][btn] == 1{
 			e.Queue[floor][btn] = 0
-			Backup_internal_queue(*e)
+			backup.Backup_internal_queue(*e)
 		}
 	}
+}
+
+func Clear_global_queue(send_global_queue chan [4][2]int, old_queue [4][2]int, floor int){
+	for btn := 0; btn < 2; btn++ {
+		if old_queue[floor][btn] == 1{
+			old_queue[floor][btn] = 0
+		}
+	}
+	send_global_queue <- old_queue
 }
 
 
@@ -78,35 +87,6 @@ func Print_queue(e def.Elevator) {
 		fmt.Printf("\n")
 	}
 	fmt.Printf("\n\n")
-}
-
-
-func Queue_to_string(e def.Elevator) string {
-	var queue_string string
-	var order_string string
-	for f := 0; f < def.N_floors; f++ {
-		for btn := 0; btn < def.N_buttons; btn++ {
-			if e.Queue[f][btn] == 1{
-				order_string = "1"
-			} else {
-				order_string = "0"
-			}
-			queue_string += order_string
-		}
-	}
-	return queue_string
-}
-
-func Queue_from_string(queue_string string) [4][3]int {
-	queue := [4][3]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
-	index := 0
-	for i:=0; i<4; i++{
-		for j:=0; j<3; j++{
-			queue[i][j] = int(queue_string[index])
-			index += 1
-		}
-	}
-	return queue
 }
 
 
@@ -127,6 +107,7 @@ func Should_stop(e def.Elevator) bool {
 
 func Enqueue(e *def.Elevator, order def.Order) {
 	e.Queue[order.Floor][order.Type] = 1
+	backup.Backup_internal_queue(*e)
 }
 
 func Update_global_queue(global_queue_chan chan [4][2]int, old_queue [4][2]int, new_order def.Order){
@@ -138,7 +119,3 @@ func Update_global_queue(global_queue_chan chan [4][2]int, old_queue [4][2]int, 
 	}
 }
 
-func Backup_internal_queue(elevator def.Elevator){
-	queue_string := Queue_to_string(elevator)
-	backup.To_backup(queue_string)
-}

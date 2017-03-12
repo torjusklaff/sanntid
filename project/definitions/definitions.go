@@ -1,5 +1,6 @@
 package definitions
 
+import "time"
 
 
 const (

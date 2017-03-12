@@ -8,10 +8,8 @@ import "C"
 import def "../definitions"
 import "fmt"
 import "time"
-import (
-	"../backup"
-	"../queue"
-)
+import "../backup"
+
 
 func Set_motor_direction(dirn def.Motor_direction) {
 	C.elev_set_motor_direction(C.elev_motor_direction_t(dirn))
@@ -100,6 +98,7 @@ func Clear_lights_at_floor(floor int) {
 		Set_button_lamp(button, 0)
 	}
 }
+
 func Elev_init() def.Elevator {
 	Set_motor_direction(def.Dir_stop)
 	C.elev_init()
@@ -129,18 +128,36 @@ func Elev_init() def.Elevator {
 	return elev
 }
 
+
 func Elev_init_from_backup() def.Elevator {
-	elevator := Elev_init()
+	Set_motor_direction(def.Dir_stop)
+	C.elev_init()
+	//clear_all_lamps()
 
-	last_queue := backup.Read_last_line(12)
-	elevator.Queue = queue.Queue_from_string(last_queue)
-
-	first_direction := queue.Choose_direction(elevator)
-	Set_motor_direction(first_direction)
-	elevator.Current_direction = first_direction
-	if first_direction != def.Dir_stop{
-		elevator.Elevator_state = def.Moving
+	Set_motor_direction(def.Dir_down)
+	for Get_floor_sensor_signal() == -1 {
 	}
-	return elevator
-}
+	fmt.Printf("Found floor in init\n")
+	Set_motor_direction(def.Dir_stop)
+	Set_floor_indicator(Get_floor_sensor_signal())
 
+	// Initializing an elevator-object
+	door_timer := time.NewTimer(3 * time.Second)
+	door_timer.Stop()
+	motor_stop_timer := time.NewTimer(10 * time.Second)
+	motor_stop_timer.Stop()
+
+	var elev def.Elevator
+	elev.Last_floor = Get_floor_sensor_signal()
+	elev.Current_direction = def.Dir_stop
+	elev.Elevator_state = def.Idle
+	elev.Door_timer = door_timer
+	elev.Motor_stop_timer = motor_stop_timer
+	elev.Elevator_state = def.Idle
+
+
+	last_queue := backup.Read_last_line(24)
+	fmt.Print(last_queue)
+	elev.Queue = backup.Queue_from_string(last_queue)
+	return elev
+}

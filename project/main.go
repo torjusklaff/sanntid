@@ -4,13 +4,12 @@ package main
 import (
 	arb "./arbitrator"
 	"./driver"
-	//"./backup"
+	"./backup"
 	def "./definitions"
 	"./fsm"
 	net "./network"
 	"./queue"
 	"fmt"
-	"time"
 	"os"
 	"os/signal"
 	"log"
@@ -24,6 +23,7 @@ func main() {
 	var elevator def.Elevator
 	if _, err := os.Stat("log.txt"); err == nil {
   		elevator = driver.Elev_init_from_backup()
+  		fsm.FSM_where_to_next(elevator)
 	} else {
 		elevator = driver.Elev_init()
 	}
@@ -69,8 +69,9 @@ func main() {
 		case floor := <-on_floor:
 			fsm.FSM_floor_arrival(floor, &elevator)
 		
-		case <-door_timer.C:
+		case <-elevator.Door_timer.C:
 			fmt.Printf("Timer stopped\n")
+			queue.Clear_global_queue(send_global_queue, all_external_orders, elevator.Last_floor)
 			fsm.FSM_on_door_timeout(&elevator)
 
 		case new_order := <- receive_new_order:
@@ -79,7 +80,7 @@ func main() {
 		case new_order := <-assigned_new_order:
 			if elevator.Queue[new_order.Floor][int(new_order.Type)] == 0{
 				fmt.Print("Assigned new order\n")
-				queue.Backup_internal_queue(elevator)
+				backup.Backup_internal_queue(elevator)
 				queue.Enqueue(&elevator, new_order)
 				fsm.FSM_next_order(&elevator, new_order)
 				driver.Set_button_lamp_from_internal_queue(elevator.Queue)
@@ -111,5 +112,5 @@ func Safe_kill() {
 	if err != nil {
         log.Fatalf("Error deleting file: %v", err)
     }
-	log.Fatal("User terminated program.\n")
+	log.Fatal("\nUser terminated program.\n")
 }
