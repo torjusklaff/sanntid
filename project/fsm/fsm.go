@@ -80,14 +80,14 @@ func FsmNextOrder(elevator *def.Elevator, next_order def.Order) { //arbitrator d
 	queue.PrintQueue(*elevator)
 }
 
-func FSM_on_door_timeout(elevator *def.Elevator) {
+func FsmOnDoorTimeout(elevator *def.Elevator) {
 	fmt.Print("FSM_on_door_timeout\n")
-	queue.Print_queue(*elevator)
-	driver.Set_door_open_lamp(0)
+	queue.PrintQueue(*elevator)
+	driver.SetDoorOpenLamp(0)
 	switch elevator.Elevator_state {
 	case def.Stop_on_floor:
-		elevator.Current_direction = queue.Choose_direction(*elevator)
-		driver.Set_motor_direction(elevator.Current_direction)
+		elevator.Current_direction = queue.ChooseDirection(*elevator)
+		driver.SetMotorDirection(elevator.Current_direction)
 
 		if elevator.Current_direction == def.Dir_stop {
 			elevator.Elevator_state = def.Idle
@@ -98,8 +98,8 @@ func FSM_on_door_timeout(elevator *def.Elevator) {
 		}
 		break
 	case def.Idle:
-		elevator.Current_direction = queue.Choose_direction(*elevator)
-		driver.Set_motor_direction(elevator.Current_direction)
+		elevator.Current_direction = queue.ChooseDirection(*elevator)
+		driver.SetMotorDirection(elevator.Current_direction)
 
 		if elevator.Current_direction == def.Dir_stop {
 			elevator.Elevator_state = def.Idle
@@ -145,7 +145,7 @@ func FsmWhereToNext(elevator def.Elevator) {
 	}
 }
 
-func FSM_motor_stop(elevator *def.Elevator) def.Elevator {
+func FsmMotorStop(elevator *def.Elevator) def.Elevator {
 	fmt.Print("FSM_motor_stop\n")
 	elevator.Current_direction = def.Dir_stop
 	driver.SetMotorDirection(def.Dir_stop)

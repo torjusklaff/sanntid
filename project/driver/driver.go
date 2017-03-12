@@ -10,15 +10,15 @@ import "fmt"
 import "time"
 import "../backup"
 
-func Set_motor_direction(dirn def.Motor_direction) {
+func SetMotorDirection(dirn def.Motor_direction) {
 	C.elev_set_motor_direction(C.elev_motor_direction_t(dirn))
 }
 
-func Set_button_lamp(button def.Order, value int) {
+func SetButtonLamp(button def.Order, value int) {
 	C.elev_set_button_lamp(C.elev_button_type_t(button.Type), C.int(button.Floor), C.int(value))
 }
 
-func Set_button_lamp_from_internal_queue(queue [4][3]int) {
+func SetButtonLampFromInternalQueue(queue [4][3]int) {
 	for f := 0; f < def.N_floors; f++ {
 		for btn := 0; btn < def.N_buttons; btn++ {
 
@@ -26,12 +26,12 @@ func Set_button_lamp_from_internal_queue(queue [4][3]int) {
 			button.Floor = f
 			button.Type = def.Button_type(btn)
 
-			Set_button_lamp(button, queue[f][btn])
+			SetButtonLamp(button, queue[f][btn])
 		}
 	}
 }
 
-func Set_button_lamp_from_global_queue(queue [4][2]int) {
+func SetButtonLampFromGlobalQueue(queue [4][2]int) {
 	for f := 0; f < def.N_floors; f++ {
 		for btn := 0; btn < 2; btn++ {
 
@@ -39,24 +39,24 @@ func Set_button_lamp_from_global_queue(queue [4][2]int) {
 			button.Floor = f
 			button.Type = def.Button_type(btn)
 
-			Set_button_lamp(button, queue[f][btn])
+			SetButtonLamp(button, queue[f][btn])
 		}
 	}
 }
 
-func Set_floor_indicator(floor int) {
+func SetFloorIndicator(floor int) {
 	C.elev_set_floor_indicator(C.int(floor))
 }
 
-func Set_door_open_lamp(value int) {
+func SetDoorOpenLamp(value int) {
 	C.elev_set_door_open_lamp(C.int(value))
 }
 
-func Get_button_signal(button def.Order) int {
+func GetButtonSignal(button def.Order) int {
 	return int(C.elev_get_button_signal(C.elev_button_type_t(button.Type), C.int(button.Floor)))
 }
 
-func Check_all_buttons(external_button_pressed chan def.Order, internal_button_pressed chan def.Order) {
+func CheckAllButtons(external_button_pressed chan def.Order, internal_button_pressed chan def.Order) {
 	var pressed_button def.Order
 	var button_signal def.Order
 	for {
@@ -65,7 +65,7 @@ func Check_all_buttons(external_button_pressed chan def.Order, internal_button_p
 				button_signal.Floor = floor
 				button_signal.Type = def.Button_type(button)
 
-				if Get_button_signal(button_signal) == 1 {
+				if GetButtonSignal(button_signal) == 1 {
 					pressed_button.Type = def.Button_type(button)
 					pressed_button.Floor = floor
 					if pressed_button.Type == def.Buttoncall_internal {
@@ -79,45 +79,45 @@ func Check_all_buttons(external_button_pressed chan def.Order, internal_button_p
 	}
 }
 
-func Get_floor_sensor_signal() int {
+func GetFloorSensorSignal() int {
 	return int(C.elev_get_floor_sensor_signal())
 }
 
-func Elevator_on_floor(on_floor chan int, elevator def.Elevator) {
+func ElevatorOnFloor(on_floor chan int, elevator def.Elevator) {
 	for {
-		if (Get_floor_sensor_signal() != elevator.Last_floor) && (Get_floor_sensor_signal() != -1) {
+		if (GetFloorSensorSignal() != elevator.Last_floor) && (GetFloorSensorSignal() != -1) {
 
-			on_floor <- Get_floor_sensor_signal()
+			on_floor <- GetFloorSensorSignal()
 		}
 	}
 }
 
-func Clear_lights_at_floor(floor int) {
+func ClearLightsAtFloor(floor int) {
 	for btn := 0; btn < def.N_buttons; btn++ {
 		var button def.Order
 		button.Type = def.Button_type(btn)
 		button.Floor = floor
-		Set_button_lamp(button, 0)
+		SetButtonLamp(button, 0)
 	}
 }
 
-func Elev_init() def.Elevator {
-	Set_motor_direction(def.Dir_stop)
+func ElevInit() def.Elevator {
+	SetMotorDirection(def.Dir_stop)
 	C.elev_init()
 	//clear_all_lamps()
 
-	Set_motor_direction(def.Dir_down)
+	SetMotorDirection(def.Dir_down)
 
 	it := 0
-	for Get_floor_sensor_signal() == -1 {
+	for GetFloorSensorSignal() == -1 {
 		it += 1
 		if it == 100000 {
-			Set_motor_direction(def.Dir_up)
+			SetMotorDirection(def.Dir_up)
 		}
 	}
 	fmt.Printf("Found floor in init\n")
-	Set_motor_direction(def.Dir_stop)
-	Set_floor_indicator(Get_floor_sensor_signal())
+	SetMotorDirection(def.Dir_stop)
+	SetFloorIndicator(GetFloorSensorSignal())
 
 	// Initializing an elevator-object
 	door_timer := time.NewTimer(3 * time.Second)
@@ -126,7 +126,7 @@ func Elev_init() def.Elevator {
 	motor_stop_timer.Stop()
 
 	var elev def.Elevator
-	elev.Last_floor = Get_floor_sensor_signal()
+	elev.Last_floor = GetFloorSensorSignal()
 	elev.Current_direction = def.Dir_stop
 	elev.Queue = [4][3]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
 	elev.Elevator_state = def.Idle
@@ -136,11 +136,11 @@ func Elev_init() def.Elevator {
 	return elev
 }
 
-func Elev_init_from_backup() def.Elevator {
-	elev := Elev_init()
+func ElevInitFromBackup() def.Elevator {
+	elev := ElevInit()
 
-	last_queue := backup.Read_last_line(24)
+	last_queue := backup.ReadLastLine(24)
 	fmt.Print(last_queue)
-	elev.Queue = backup.Queue_from_string(last_queue)
+	elev.Queue = backup.QueueFromString(last_queue)
 	return elev
 }

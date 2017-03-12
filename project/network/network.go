@@ -21,7 +21,7 @@ const (
 )
 
 // Setter opp alle channels og funksjoner i en felles initialisering
-func Network_init(
+func NetworkInit(
 	id string,
 	n_elevators chan int,
 	receive_cost chan def.Cost,
@@ -30,15 +30,15 @@ func Network_init(
 	send_cost chan def.Cost,
 	send_new_order chan def.Order,
 	send_remove_order chan def.Order,
-	send_global_queue chan [4][2]int, 
+	send_global_queue chan [4][2]int,
 	received_global_queue chan [4][2]int) {
 
-	go Peer_listener(id, n_elevators)
-	go Send_msg(id, send_cost, send_new_order, send_remove_order, send_global_queue)
-	go Receive_msg(receive_cost, receive_new_order, receive_remover_order, received_global_queue)
+	go PeerListener(id, n_elevators)
+	go SendMsg(id, send_cost, send_new_order, send_remove_order, send_global_queue)
+	go ReceiveMsg(receive_cost, receive_new_order, receive_remover_order, received_global_queue)
 }
 
-func Get_id() string {
+func GetId() string {
 	var id string
 	flag.StringVar(&id, "id", "", "id of this peer")
 	flag.Parse()
@@ -52,7 +52,7 @@ func Get_id() string {
 }
 
 // Setter opp en peer-listener som sjekker etter updates på levende heiser
-func Peer_listener(id string, n_elevators chan int) {
+func PeerListener(id string, n_elevators chan int) {
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
 	go peers.Transmitter(peer_port, id, peerTxEnable)
@@ -72,7 +72,7 @@ func Peer_listener(id string, n_elevators chan int) {
 
 // Setter opp channels for broadcast og sender det som kommer inn på input-channelsene
 // se main fra network-module gitt på github
-func Send_msg(
+func SendMsg(
 	localIP string,
 	send_cost chan def.Cost,
 	send_new_order chan def.Order,
@@ -108,7 +108,7 @@ func Send_msg(
 }
 
 // Setter opp channels som lytter etter msg fra Send_msg()		(se main fra network-modul)
-func Receive_msg(
+func ReceiveMsg(
 	receive_cost chan def.Cost,
 	receive_new_order chan def.Order,
 	receive_remover_order chan def.Order,

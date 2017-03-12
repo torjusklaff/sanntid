@@ -25,16 +25,16 @@ func main() {
 
 	var elevator def.Elevator
 	if _, err := os.Stat("log.txt"); err == nil {
-		elevator = driver.Elev_init_from_backup()
+		elevator = driver.ElevInitFromBackup()
 		var dummy_order def.Order
 		dummy_order.Floor = 1
 		dummy_order.Type = def.Buttoncall_internal
-		fsm.FSM_next_order(&elevator, dummy_order)
+		fsm.FsmNextOrder(&elevator, dummy_order)
 	} else {
-		elevator = driver.Elev_init()
+		elevator = driver.ElevInit()
 	}
 
-	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
+	fmt.Printf("%v\n", driver.GetFloorSensorSignal())
 
 	var previous_order def.Order
 	previous_order.Type = def.Buttoncall_internal
@@ -59,12 +59,12 @@ func main() {
 	on_floor := pollFloors()
 	error_handling := make(chan string)
 
-	id := net.Get_id()
+	id := net.GetId()
 
 	go net.NetworkInit(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue)
-	go arb.Arbitrator_init(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
+	go arb.ArbitratorInit(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
-	go driver.Check_all_buttons(send_new_order, assigned_new_order)
+	go driver.CheckAllButtons(send_new_order, assigned_new_order)
 	//go driver.Elevator_on_floor(on_floor, elevator)
 
 	go SafeKill()
@@ -73,32 +73,32 @@ func main() {
 	floor_sense := 0
 	for {
 		test_it += 1
-		if sensor := driver.Get_floor_sensor_signal(); sensor != -1 {
+		if sensor := driver.GetFloorSensorSignal(); sensor != -1 {
 			floor_sense = sensor
 		}
 		if test_it == 500000 {
-			backup.Backup_internal_queue(elevator)
-			driver.Set_button_lamp_from_internal_queue(elevator.Queue)
-			driver.Set_button_lamp_from_global_queue(all_external_orders)
+			backup.BackupInternalQueue(elevator)
+			driver.SetButtonLampFromInternalQueue(elevator.Queue)
+			driver.SetButtonLampFromGlobalQueue(all_external_orders)
 			test_it = 0
 		}
 		select {
 		case floor := <-on_floor:
-			fsm.FSM_floor_arrival(floor, &elevator)
+			fsm.FsmFloorArrival(floor, &elevator)
 
 		case <-elevator.Door_timer.C:
 			fmt.Printf("Timer stopped\n")
-			queue.Clear_global_queue(send_global_queue, all_external_orders, elevator.Last_floor)
-			fsm.FSM_on_door_timeout(&elevator)
+			queue.ClearGlobalQueue(send_global_queue, all_external_orders, elevator.Last_floor)
+			fsm.FsmOnDoorTimeout(&elevator)
 
 		case new_order := <-receive_new_order:
-			queue.Update_global_queue(send_global_queue, all_external_orders, new_order)
+			queue.UpdateGlobalQueue(send_global_queue, all_external_orders, new_order)
 
 		case new_order := <-assigned_new_order:
 			if elevator.Queue[new_order.Floor][int(new_order.Type)] == 0 {
 				fmt.Print("Assigned new order\n")
 				queue.Enqueue(&elevator, new_order)
-				fsm.FSM_next_order(&elevator, new_order)
+				fsm.FsmNextOrder(&elevator, new_order)
 			}
 		case global_queue := <-received_global_queue:
 			all_external_orders = global_queue
@@ -111,13 +111,13 @@ func main() {
 
 		case err := <-error_handling:
 			if err == "MOTORSTOP" {
-				elevator = fsm.FSM_motor_stop(&elevator)
+				elevator = fsm.FsmMotorStop(&elevator)
 
 				var dummy_order def.Order
 				dummy_order.Floor = 1
 				dummy_order.Type = def.Buttoncall_internal
 
-				fsm.FSM_next_order(&elevator, dummy_order)
+				fsm.FsmNextOrder(&elevator, dummy_order)
 			}
 			if err == "PROGRAM_CRASH" {
 				def.Restart.Run()
@@ -138,10 +138,10 @@ func SafeKill() {
 	<-c
 	var err = os.Remove("log.txt")
 	fmt.Print("User terminated program.\n\n")
-	driver.Set_motor_direction(def.Dir_stop)
+	driver.SetMotorDirection(def.Dir_stop)
 
 	for i := 0; i < def.N_floors; i++ {
-		driver.Clear_lights_at_floor(i)
+		driver.ClearLightsAtFloor(i)
 	}
 
 	if err != nil {
@@ -153,10 +153,10 @@ func SafeKill() {
 func pollFloors() <-chan int {
 	c := make(chan int)
 	go func() {
-		oldFloor := driver.Get_floor_sensor_signal()
+		oldFloor := driver.GetFloorSensorSignal()
 
 		for {
-			newFloor := driver.Get_floor_sensor_signal()
+			newFloor := driver.GetFloorSensorSignal()
 			if newFloor != oldFloor && newFloor != -1 {
 				c <- newFloor
 			}
