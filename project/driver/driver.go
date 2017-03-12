@@ -105,7 +105,13 @@ func Elev_init() def.Elevator {
 	//clear_all_lamps()
 
 	Set_motor_direction(def.Dir_down)
+
+	it := 0
 	for Get_floor_sensor_signal() == -1 {
+		it += 1
+		if it == 100000{
+			Set_motor_direction(def.Dir_up)
+		}
 	}
 	fmt.Printf("Found floor in init\n")
 	Set_motor_direction(def.Dir_stop)
@@ -130,31 +136,7 @@ func Elev_init() def.Elevator {
 
 
 func Elev_init_from_backup() def.Elevator {
-	Set_motor_direction(def.Dir_stop)
-	C.elev_init()
-	//clear_all_lamps()
-
-	Set_motor_direction(def.Dir_down)
-	for Get_floor_sensor_signal() == -1 {
-	}
-	fmt.Printf("Found floor in init\n")
-	Set_motor_direction(def.Dir_stop)
-	Set_floor_indicator(Get_floor_sensor_signal())
-
-	// Initializing an elevator-object
-	door_timer := time.NewTimer(3 * time.Second)
-	door_timer.Stop()
-	motor_stop_timer := time.NewTimer(10 * time.Second)
-	motor_stop_timer.Stop()
-
-	var elev def.Elevator
-	elev.Last_floor = Get_floor_sensor_signal()
-	elev.Current_direction = def.Dir_stop
-	elev.Elevator_state = def.Idle
-	elev.Door_timer = door_timer
-	elev.Motor_stop_timer = motor_stop_timer
-	elev.Elevator_state = def.Idle
-
+	elev := Elev_init()
 
 	last_queue := backup.Read_last_line(24)
 	fmt.Print(last_queue)

@@ -86,7 +86,6 @@ func Print_queue(e def.Elevator) {
 		}
 		fmt.Printf("\n")
 	}
-	fmt.Printf("\n\n")
 }
 
 

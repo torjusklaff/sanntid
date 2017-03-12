@@ -13,17 +13,23 @@ import (
 	"os"
 	"os/signal"
 	"log"
+	"time"
 )
 
 func main() {
 	all_external_orders := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 
-	
+	test_timer := time.NewTimer(1 * time.Second)
+	test_timer.Stop()
+
 	
 	var elevator def.Elevator
 	if _, err := os.Stat("log.txt"); err == nil {
   		elevator = driver.Elev_init_from_backup()
-  		fsm.FSM_where_to_next(elevator)
+  		var dummy_order def.Order
+  		dummy_order.Floor = 1
+  		dummy_order.Type = def.Buttoncall_internal
+  		fsm.FSM_next_order(&elevator, dummy_order)
 	} else {
 		elevator = driver.Elev_init()
 	}
@@ -37,7 +43,7 @@ func main() {
 	// 	CHANNELS
 	n_elevators := make(chan int)
 
-	error_handling := make(chan string)
+	//error_handling := make(chan string)
 
 	receive_cost := make(chan def.Cost)
 	receive_new_order := make(chan def.Order)
@@ -63,8 +69,17 @@ func main() {
 	go driver.Elevator_on_floor(on_floor, elevator)
 	go Safe_kill()
 
+	test_it := 0
 
 	for {
+		test_it += 1
+		if(test_it == 500000){
+			backup.Backup_internal_queue(elevator)
+			driver.Set_button_lamp_from_internal_queue(elevator.Queue)
+			driver.Set_button_lamp_from_global_queue(all_external_orders)
+			test_it = 0
+		}
+		
 		select {
 		case floor := <-on_floor:
 			fsm.FSM_floor_arrival(floor, &elevator)
@@ -80,22 +95,26 @@ func main() {
 		case new_order := <-assigned_new_order:
 			if elevator.Queue[new_order.Floor][int(new_order.Type)] == 0{
 				fmt.Print("Assigned new order\n")
-				backup.Backup_internal_queue(elevator)
 				queue.Enqueue(&elevator, new_order)
 				fsm.FSM_next_order(&elevator, new_order)
-				driver.Set_button_lamp_from_internal_queue(elevator.Queue)
 			}
 		case global_queue := <-received_global_queue:
 			all_external_orders = global_queue
-			driver.Set_button_lamp_from_global_queue(all_external_orders)
 
 		case <-elevator.Motor_stop_timer.C:
 			fmt.Print("main: detected motor_stop\n")
-			fsm.FSM_motor_stop(&elevator)
-			error_message := "MOTORSTOP"
+			elevator = fsm.FSM_motor_stop(&elevator)
+
+			var dummy_order def.Order
+	  		dummy_order.Floor = 1
+	  		dummy_order.Type = def.Buttoncall_internal
+	  		fsm.FSM_next_order(&elevator, dummy_order)
+
+
+			/*error_message := "MOTORSTOP"
 			error_handling <- error_message
-			elevator.Elevator_state = def.Motor_stop
-		
+			elevator.Elevator_state = def.Motor_stop*/
+
 		default:
 			break
 		}
@@ -112,5 +131,14 @@ func Safe_kill() {
 	if err != nil {
         log.Fatalf("Error deleting file: %v", err)
     }
+	log.Fatal("\nUser terminated program.\n")
+}
+
+func Safe_kill_keep_backup(){
+	var c = make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	<-c
+	fmt.Print("User terminated program.\n\n")
+	driver.Set_motor_direction(def.Dir_stop)
 	log.Fatal("\nUser terminated program.\n")
 }
