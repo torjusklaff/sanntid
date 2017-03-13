@@ -66,6 +66,7 @@ func FsmNextOrder(elevator *def.Elevator, next_order def.Order) { //arbitrator d
 			fmt.Print("FSM_next_order: Reset motor_timer\n")
 		}
 	case def.Moving:
+		break
 	case def.Stop_on_floor:
 		queue.ClearAtFloor(elevator, elevator.Last_floor)
 		driver.ClearLightsAtFloor(elevator.Last_floor)

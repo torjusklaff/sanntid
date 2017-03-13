@@ -1,6 +1,6 @@
 package main
 
-//Plass 15 ip: 148 plass 12 ip: 144
+//Plass 15 ip: 148 plass 12 ip: 144 plass 2 ip: 149 plass 3 ip: 150
 // Test-main for driver-files
 import (
 	arb "./arbitrator"
@@ -20,8 +20,6 @@ import (
 func main() {
 	all_external_orders := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 
-	test_timer := time.NewTimer(1 * time.Second)
-	//test_timer.Stop()
 	send_states_ticker := time.NewTicker(100*time.Millisecond)
 
 	var elevator def.Elevator
@@ -73,22 +71,17 @@ func main() {
 	go SafeKill()
 
 	test_it := 0
-	floor_sense := 0
 	for {
 		test_it += 1
-		if sensor := driver.GetFloorSensorSignal(); sensor != -1 {
-			floor_sense = sensor
-		}
 		if test_it == 500000 {
 			backup.BackupInternalQueue(elevator)
-			driver.SetButtonLampFromInternalQueue(elevator.Queue)
-			driver.SetButtonLampFromGlobalQueue(all_external_orders)
+			//driver.SetButtonLampFromInternalQueue(elevator.Queue)
+			//driver.SetButtonLampFromGlobalQueue(all_external_orders)
 			test_it = 0
 		}
 		select {
 		case floor := <-on_floor:
 			fsm.FsmFloorArrival(floor, &elevator)
-			send_states <- elevator
 
 		case <-elevator.Door_timer.C:
 			fmt.Printf("Timer stopped\n")
@@ -128,7 +121,6 @@ func main() {
 			}
 		case <- send_states_ticker.C:
 			send_states <- elevator
-			fmt.Printf("Current floor: %v \t Floor sensor: %v\n", elevator.Last_floor, floor_sense)
 		default:
 			break
 		}

@@ -9,32 +9,6 @@ import (
 
 var max_distance int = def.N_floors * def.N_buttons
 
-func costFunction(e def.Elevator, order def.Order) float64 {
-	diff := order.Floor - e.Last_floor
-	cost := math.Abs(float64(diff)) + movementPenalty(e.Elevator_state, e.Current_direction, diff) + turnPenalty(e.Elevator_state, e.Last_floor, e.Current_direction, order.Floor) + orderDirectionPenalty(e.Current_direction, order.Floor, order.Type)
-	return cost
-}
-
-
-func findLowestCost(costs map[string]def.Cost) def.Cost {
-	lowest_cost := math.Inf(+1)
-	for cost := range costs {
-		if cost.Cost < lowest_cost {
-			lowest_cost = cost.Cost
-			costs[i] = costs[i+1]
-			costs[i+1] = temp
-		}
-		if costs[0] == costs[1] {
-			if splitIP(costs[0].Id) < splitIP(costs[1].Id) {
-				return costs[0]
-			} else {
-				return costs[1]
-			}
-		}
-	}
-	return costs[0]
-}
-
 // initialiserer arbitratoren sånn at den kan gi ut orders hele tiden
 func ArbitratorInit(
 	e def.Elevator,
@@ -48,15 +22,17 @@ func ArbitratorInit(
 	elev_states := make(map[string]def.Elevator)
 	n_elevators := 1
 	costs := make(map[string]def.Cost)
+	elev_states[localIP] = e
 	for {
 		select {
 		case elevators := <-number_of_connected_elevators:
 			n_elevators = elevators
 			fmt.Printf("Number of elevators: %v \n", n_elevators)
 		case current_new_order := <-receive_new_order:
-			fmt.Printf("We receive a new order\n")
-			send_states <- e
+			//fmt.Printf("We receive a new order\n")
+			//send_states <- e
 			if (current_new_order.Type == def.Buttoncall_internal) || (n_elevators == 1) {
+				fmt.Printf("We are alone, we get the order!\n")
 				assigned_new_order <- current_new_order
 			} else {
 				
@@ -67,7 +43,21 @@ func ArbitratorInit(
 
 			}
 		case new_states := <-received_states:
-			elev_states[new_states.Id] = new_states
+			id_in_list := false
+			for known_ids, _ := range elev_states{
+				fmt.Printf("ID: %s \n",known_ids)
+				if new_states.Id == known_ids{
+					fmt.Printf("Update states for ID %s\n",new_states.Id)
+					id_in_list = true
+					elev_states[known_ids]=new_states
+				}
+			}
+			if !id_in_list{
+				fmt.Printf("Add new index and states\n")
+				elev_states[new_states.Id] = new_states
+			}
+
+			
 		}
 	}
 }
@@ -78,13 +68,14 @@ func orderSelection(
 	cost_list map[string]def.Cost,
 	n_elevators int,
 	localIP string) {
-
+	fmt.Printf("")
 	lowest_cost := findLowestCost(cost_list)
-
+	fmt.Printf("Lowest cost calculated\n")
 	// sender
 	if lowest_cost.Id == localIP {
-		assigned_new_order <- current_cost.Current_order
 		fmt.Printf("We took the order!\n")
+		assigned_new_order <- lowest_cost.Current_order
+		
 	} else {
 		fmt.Printf("Someone else took the order\n")
 	}
@@ -137,4 +128,27 @@ func orderDirectionPenalty(elevator_direction def.Motor_direction, order_floor i
 	} else {
 		return 0
 	}
+}
+
+func costFunction(e def.Elevator, order def.Order) float64 {
+	diff := order.Floor - e.Last_floor
+	cost := math.Abs(float64(diff)) + movementPenalty(e.Elevator_state, e.Current_direction, diff) + turnPenalty(e.Elevator_state, e.Last_floor, e.Current_direction, order.Floor) + orderDirectionPenalty(e.Current_direction, order.Floor, order.Type)
+	return cost
+}
+
+
+func findLowestCost(costs map[string]def.Cost) def.Cost {
+	dummy_order := def.Order{Type: 0, Floor: 0, Internal: false, Id: " "}
+	lowest_cost:= def.Cost{Cost: math.Inf(+1), Current_order: dummy_order, Id: " "}
+	for Id, cost := range costs {
+		if cost.Cost < lowest_cost.Cost {
+			lowest_cost = cost
+		}
+		if cost.Cost == lowest_cost.Cost {
+			if splitIP(Id) < splitIP(lowest_cost.Id) {
+				lowest_cost = cost
+			}
+		}
+	}
+	return lowest_cost
 }

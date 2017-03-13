@@ -73,6 +73,7 @@ func CheckAllButtons(external_button_pressed chan def.Order, internal_button_pre
 					} else {
 						external_button_pressed <- pressed_button
 					}
+					time.Sleep(50*time.Millisecond)
 				}
 			}
 		}
