@@ -18,9 +18,9 @@ func ArbitratorInit(
 	received_states chan def.Elevator,
 	send_states chan def.Elevator,
 	number_of_connected_elevators chan int) {
-
-	elev_states := make(map[string]def.Elevator)
+	
 	n_elevators := 1
+	elev_states := make(map[string]def.Elevator)
 	costs := make(map[string]def.Cost)
 	elev_states[localIP] = e
 	for {
@@ -56,7 +56,7 @@ func ArbitratorInit(
 				fmt.Printf("Add new index and states\n")
 				elev_states[new_states.Id] = new_states
 			}
-			fmt.Printf("Length of known elevators with states: %i", len(elev_states))
+			fmt.Printf("Length of known elevators with states: %i \n", len(elev_states))
 			
 		}
 	}

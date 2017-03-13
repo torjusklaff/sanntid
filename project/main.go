@@ -48,7 +48,7 @@ func main() {
 	receive_new_order := make(chan def.Order)
 	receive_remove_order := make(chan def.Order)
 	received_global_queue := make(chan [4][2]int)
-	received_states := make(chan def.Elevator)
+	received_states := make(chan def.Elevator, 10)
 
 	send_cost := make(chan def.Cost)
 	send_new_order := make(chan def.Order)
