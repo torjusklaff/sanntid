@@ -1,26 +1,40 @@
 package main
 
+//Plass 15 ip: 148 plass 12 ip: 144
 // Test-main for driver-files
 import (
 	arb "./arbitrator"
-	"./driver"
-	//"./backup"
+	"./backup"
 	def "./definitions"
+	"./driver"
 	"./fsm"
 	net "./network"
 	"./queue"
 	"fmt"
+	"log"
+	"os"
+	"os/signal"
 	"time"
 )
 
 func main() {
+	all_external_orders := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 
-	door_timer := time.NewTimer(3 * time.Second)
-	door_timer.Stop()
+	test_timer := time.NewTimer(1 * time.Second)
+	//test_timer.Stop()
 
-	elevator := driver.Elev_init()
+	var elevator def.Elevator
+	if _, err := os.Stat("log.txt"); err == nil {
+		elevator = driver.ElevInitFromBackup()
+		var dummy_order def.Order
+		dummy_order.Floor = 1
+		dummy_order.Type = def.Buttoncall_internal
+		fsm.FsmNextOrder(&elevator, dummy_order)
+	} else {
+		elevator = driver.ElevInit()
+	}
 
-	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
+	fmt.Printf("%v\n", driver.GetFloorSensorSignal())
 
 	var previous_order def.Order
 	previous_order.Type = def.Buttoncall_internal
@@ -29,93 +43,128 @@ func main() {
 	// 	CHANNELS
 	n_elevators := make(chan int)
 
+	//error_handling := make(chan string)
+
 	receive_cost := make(chan def.Cost)
 	receive_new_order := make(chan def.Order)
 	receive_remove_order := make(chan def.Order)
+	received_global_queue := make(chan [4][2]int)
+	received_states := make(chan def.Elevator)
 
 	send_cost := make(chan def.Cost)
 	send_new_order := make(chan def.Order)
 	send_remove_order := make(chan def.Order)
 	assigned_new_order := make(chan def.Order)
+	send_global_queue := make(chan [4][2]int)
+	send_states := make(chan def.Elevator)
 
-	//button_pressed := make(chan def.Order)
-	on_floor := make(chan int)
+	on_floor := pollFloors()
+	error_handling := make(chan string)
 
-	id := net.Get_id()
-	go net.Network_init(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order)
-	go arb.Arbitrator_init(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // button_pressed må endres til receive_new_order
+	id := net.GetId()
 
-	go driver.Check_all_buttons(send_new_order)
-	go driver.Elevator_on_floor(on_floor, elevator)
+	go net.NetworkInit(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue, send_states, received_states)
+	go arb.ArbitratorInit(elevator, id, receive_new_order, assigned_new_order, send_states, received_states, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
+	go driver.CheckAllButtons(send_new_order, assigned_new_order)
+	//go driver.Elevator_on_floor(on_floor, elevator)
+
+	go SafeKill()
+
+	test_it := 0
+	floor_sense := 0
 	for {
+		test_it += 1
+		if sensor := driver.GetFloorSensorSignal(); sensor != -1 {
+			floor_sense = sensor
+		}
+		if test_it == 500000 {
+			backup.BackupInternalQueue(elevator)
+			driver.SetButtonLampFromInternalQueue(elevator.Queue)
+			driver.SetButtonLampFromGlobalQueue(all_external_orders)
+			test_it = 0
+		}
 		select {
 		case floor := <-on_floor:
-			fsm.FSM_floor_arrival(floor, &elevator, door_timer)
-		case <-door_timer.C:
+			fsm.FsmFloorArrival(floor, &elevator)
+
+		case <-elevator.Door_timer.C:
 			fmt.Printf("Timer stopped\n")
-			fsm.FSM_on_door_timeout(&elevator)
+			//queue.ClearGlobalQueue(send_global_queue, all_external_orders, elevator.Last_floor)
+			fsm.FsmOnDoorTimeout(&elevator)
+
+		case new_order := <-receive_new_order:
+			queue.UpdateGlobalQueue(send_global_queue, all_external_orders, new_order)
+
 		case new_order := <-assigned_new_order:
-			fmt.Print("Assigned new order\n")
-			queue.Enqueue(&elevator, new_order)
-			fsm.FSM_next_order(&elevator, new_order, door_timer)
+			if elevator.Queue[new_order.Floor][int(new_order.Type)] == 0 {
+				fmt.Print("Assigned new order\n")
+				queue.Enqueue(&elevator, new_order)
+				fsm.FsmNextOrder(&elevator, new_order)
+			}
+		case global_queue := <-received_global_queue:
+			all_external_orders = global_queue
+
+		case <-elevator.Motor_stop_timer.C:
+			fmt.Print("main: detected motor_stop\n")
+			error_message := "MOTORSTOP"
+			error_handling <- error_message
+			elevator.Elevator_state = def.Motor_stop
+
+		case err := <-error_handling:
+			if err == "MOTORSTOP" {
+				elevator = fsm.FsmMotorStop(&elevator)
+
+				var dummy_order def.Order
+				dummy_order.Floor = 1
+				dummy_order.Type = def.Buttoncall_internal
+
+				fsm.FsmNextOrder(&elevator, dummy_order)
+			}
+			if err == "PROGRAM_CRASH" {
+				def.Restart.Run()
+			}
+		case <-test_timer.C:
+
+			fmt.Printf("Current floor: %v \t Floor sensor: %v\n", elevator.Last_floor, floor_sense)
+			test_timer.Reset(1 * time.Second)
 		default:
 			break
 		}
 	}
-
-	//Test for `en heis
-	/*
-		door_timer := time.NewTimer(3 * time.Second)
-		door_timer.Stop()
-
-		elevator := driver.Elev_init()
-
-		button_pressed := make(chan def.Order)
-		fmt.Printf("Made channel button_pressed\n")
-		on_floor := make(chan int)
-		fmt.Printf("Made channel on_floor\n")
-		go driver.Check_all_buttons(button_pressed)
-		go driver.Elevator_on_floor(on_floor, elevator)
-
-		for {
-			select {
-			case floor := <-on_floor:
-				fsm.FSM_floor_arrival(floor, &elevator, door_timer)
-			case <-door_timer.C:
-				fmt.Printf("Timer stopped\n")
-				fsm.FSM_on_door_timeout(&elevator)
-			default:
-				break
-			}
-		}*/
-
-	// Åpne ny backup-fil
-	// If file not found: lag ny fil, initialisering
-
-	/*													// Test av nettverk
-
-	go Testing_network_channels(send_cost, send_new_order)
-
-	for {
-		select {
-		case cost := <-receive_cost:
-			fmt.Printf("Cost: %v \n", cost.Cost)
-		case order := <-receive_new_order:
-			fmt.Printf("Order: %v \n", order.Floor)
-		}
-	}*/
-
 }
 
-/*func Testing_network_channels(send_cost chan def.Cost, send_new_order chan def.Order) {
-	it := 1
-	btn := def.Order{def.Buttoncall_down, 1, false, ""}
-	//cost_msg := def.Cost{0, btn, ""}
-	for {
-		btn.Floor = it
-		send_new_order <- btn
-		time.Sleep(2 * time.Second)
-		it += 1
+func SafeKill() {
+	var c = make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	<-c
+	var err = os.Remove("log.txt")
+	fmt.Print("User terminated program.\n\n")
+	driver.SetMotorDirection(def.Dir_stop)
+
+	for i := 0; i < def.N_floors; i++ {
+		driver.ClearLightsAtFloor(i)
 	}
-}*/
+
+	if err != nil {
+		log.Fatalf("Error deleting file: %v", err)
+	}
+	log.Fatal("\nUser terminated program.\n")
+
+}
+func pollFloors() <-chan int {
+	c := make(chan int)
+	go func() {
+		oldFloor := driver.GetFloorSensorSignal()
+
+		for {
+			newFloor := driver.GetFloorSensorSignal()
+			if newFloor != oldFloor && newFloor != -1 {
+				c <- newFloor
+			}
+			oldFloor = newFloor
+			time.Sleep(time.Millisecond)
+		}
+	}()
+	return c
+}
