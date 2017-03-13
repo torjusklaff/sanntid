@@ -7,20 +7,20 @@ import (
 	"strings"
 )
 
-var max_distance int = def.N_floors * def.N_buttons
+var maxDistance int = def.NumFloors * def.NumButtons
 
 func costFunction(e def.Elevator, order def.Order) float64 {
-	diff := order.Floor - e.Last_floor
-	cost := math.Abs(float64(diff)) + movementPenalty(e.Elevator_state, e.Current_direction, diff) + turnPenalty(e.Elevator_state, e.Last_floor, e.Current_direction, order.Floor) + orderDirectionPenalty(e.Current_direction, order.Floor, order.Type)
+	diff := order.Floor - e.LastFloor
+	cost := math.Abs(float64(diff)) + movementPenalty(e.ElevatorState, e.CurrentDirection, diff) + turnPenalty(e.ElevatorState, e.LastFloor, e.CurrentDirection, order.Floor) + orderDirectionPenalty(e.CurrentDirection, order.Floor, order.Type)
 	return cost
 }
 
 
 func findLowestCost(costs map[string]def.Cost) def.Cost {
-	lowest_cost := math.Inf(+1)
+	lowestCost := math.Inf(+1)
 	for cost := range costs {
-		if cost.Cost < lowest_cost {
-			lowest_cost = cost.Cost
+		if cost.Cost < lowestCost {
+			lowestCost = cost.Cost
 			costs[i] = costs[i+1]
 			costs[i+1] = temp
 		}
@@ -39,51 +39,51 @@ func findLowestCost(costs map[string]def.Cost) def.Cost {
 func ArbitratorInit(
 	e def.Elevator,
 	localIP string,
-	receive_new_order chan def.Order,
-	assigned_new_order chan def.Order,
-	received_states chan def.Elevator,
-	send_states chan def.Elevator,
-	number_of_connected_elevators chan int) {
+	receiveNewOrder chan def.Order,
+	assignedNewOrder chan def.Order,
+	receivedStates chan def.Elevator,
+	sendStates chan def.Elevator,
+	numberOfConnectedElevators chan int) {
 
-	elev_states := make(map[string]def.Elevator)
-	n_elevators := 1
+	elevatorStates := make(map[string]def.Elevator)
+	numElevators := 1
 	costs := make(map[string]def.Cost)
 	for {
 		select {
-		case elevators := <-number_of_connected_elevators:
-			n_elevators = elevators
-			fmt.Printf("Number of elevators: %v \n", n_elevators)
-		case current_new_order := <-receive_new_order:
+		case elevators := <-numberOfConnectedElevators:
+			numElevators = elevators
+			fmt.Printf("Number of elevators: %v \n", numElevators)
+		case currentNewOrder := <-receiveNewOrder:
 			fmt.Printf("We receive a new order\n")
-			send_states <- e
-			if (current_new_order.Type == def.Buttoncall_internal) || (n_elevators == 1) {
-				assigned_new_order <- current_new_order
+			sendStates <- e
+			if (currentNewOrder.Type == def.ButtonInternal) || (numElevators == 1) {
+				assignedNewOrder <- currentNewOrder
 			} else {
 				
-				for elevator_id := range elev_states{
-					costs[elevator_id] = def.Cost{Cost: costFunction(elev_states[elevator_id], current_new_order), Current_order: current_new_order, Id: elevator_id}
+				for elevatorID := range elevatorStates{
+					costs[elevatorID] = def.Cost{Cost: costFunction(elevatorStates[elevatorID], currentNewOrder), CurrentOrder: currentNewOrder, Id: elevatorID}
 				}
-				orderSelection(assigned_new_order, costs, n_elevators, localIP)
+				orderSelection(assignedNewOrder, costs, numElevators, localIP)
 
 			}
-		case new_states := <-received_states:
-			elev_states[new_states.Id] = new_states
+		case newStates := <-receivedStates:
+			elevatorStates[newStates.Id] = newStates
 		}
 	}
 }
 
-// Bestemmer om current heis skal ta bestillingen eller ikke, sender da på assigned_new_order
+// Bestemmer om current heis skal ta bestillingen eller ikke, sender da på assignedNewOrder
 func orderSelection(
-	assigned_new_order chan<- def.Order,
-	cost_list map[string]def.Cost,
-	n_elevators int,
+	assignedNewOrder chan<- def.Order,
+	costList map[string]def.Cost,
+	numElevators int,
 	localIP string) {
 
-	lowest_cost := findLowestCost(cost_list)
+	lowestCost := findLowestCost(costList)
 
 	// sender
-	if lowest_cost.Id == localIP {
-		assigned_new_order <- current_cost.Current_order
+	if lowestCost.Id == localIP {
+		assignedNewOrder <- currentCost.CurrentOrder
 		fmt.Printf("We took the order!\n")
 	} else {
 		fmt.Printf("Someone else took the order\n")
@@ -96,19 +96,19 @@ func splitIP(IP string) string {
 	return s[3]
 }
 
-func movementPenalty(state def.Elev_states, direction def.Motor_direction, difference int) float64 {
+func movementPenalty(state def.elevatorStates, direction def.MotorDirection, difference int) float64 {
 	switch state {
 	case def.Idle:
 		return 0
 	default:
 		switch direction {
-		case def.Dir_up:
+		case def.DirUp:
 			if difference > 0 {
 				return -0.5
 			} else if direction < 0 {
 				return 1.5
 			}
-		case def.Dir_down:
+		case def.DirDown:
 			if difference > 0 {
 				return 1.5
 			} else if difference < 0 {
@@ -119,21 +119,21 @@ func movementPenalty(state def.Elev_states, direction def.Motor_direction, diffe
 	return 0
 }
 
-func turnPenalty(state def.Elev_states, elevator_floor int, elevator_direction def.Motor_direction, order_floor int) float64 {
-	if ((state == def.Idle) && ((elevator_floor == 1) || (elevator_floor == def.N_floors))) || (state == def.Moving) {
+func turnPenalty(state def.elevatorStates, elevatorFloor int, elevatorDirection def.MotorDirection, orderedFloor int) float64 {
+	if ((state == def.Idle) && ((elevatorFloor == 1) || (elevatorFloor == def.NumFloors))) || (state == def.Moving) {
 		return 0
-	} else if (elevator_direction == def.Dir_up && order_floor < elevator_floor) || (elevator_direction == def.Dir_down && order_floor > elevator_floor) {
+	} else if (elevatorDirection == def.DirUp && orderedFloor < elevatorFloor) || (elevatorDirection == def.DirDown && orderedFloor > elevatorFloor) {
 		return 0.75
 	} else {
 		return 0
 	}
 }
 
-func orderDirectionPenalty(elevator_direction def.Motor_direction, order_floor int, order_direction def.Button_type) float64 {
-	if order_floor == 1 || order_floor == def.N_floors {
+func orderDirectionPenalty(elevatorDirection def.MotorDirection, orderedFloor int, orderDirection def.ButtonType) float64 {
+	if orderedFloor == 1 || orderedFloor == def.NumFloors {
 		return 0
-	} else if int(elevator_direction) != int(order_direction) {
-		return def.N_floors - 2 + 0.25
+	} else if int(elevatorDirection) != int(orderDirection) {
+		return def.NumFloors - 2 + 0.25
 	} else {
 		return 0
 	}

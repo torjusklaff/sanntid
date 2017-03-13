@@ -18,26 +18,26 @@ func main(){
 	// If file not found: lag ny fil, initialisering
 
 	elevator := driver.Elev_init()
-	fmt.Printf("%v\n", driver.Get_floor_sensor_signal())
+	fmt.Printf("%v\n", driver.GetFloor_sensor_signal())
 
 
 	button_pressed := make(chan def.Order_button)
 	fmt.Printf("Made channel button_pressed\n")
-	on_floor := make(chan int)
-	fmt.Printf("Made channel on_floor\n")
+	onFloor := make(chan int)
+	fmt.Printf("Made channel onFloor\n")
 
 
 	for {
-		go driver.Elevator_on_floor(on_floor, elevator)
+		go driver.Elevator_onFloor(onFloor, elevator)
 		go driver.Check_all_buttons(button_pressed)
 		
 		select{
 			case button_is_actually_pressed := <- button_pressed:
-				fsm.FSM_button_pressed(button_is_actually_pressed, &elevator)
+				fsm.FSMButtonPressed(button_is_actually_pressed, &elevator)
 			
-			case floor := <- on_floor:
-				//fmt.Printf("Inside on_floor-channel case\n")
-				fsm.FSM_floor_arrival(floor, &elevator)
+			case floor := <- onFloor:
+				//fmt.Printf("Inside onFloor-channel case\n")
+				fsm.FSMFloor_arrival(floor, &elevator)
 			
 			default:
 				break
@@ -73,10 +73,10 @@ message_transmit := make(chan def.Network_message)
 	go bcast.Transmitter(16570, cost_transmit)
 	go bcast.Receiver(16570, cost_receive)
 
-	new_order_transmit := make(chan def.Order_button) 		// sjekke om vi trenger buffer
-	new_order_receive := make(chan def.Order_button)		// sjekke om vi trenger buffer
-	go bcast.Transmitter(16571, new_order_transmit)
-	go bcast.Receiver(16571, new_order_receive)
+	newOrder_transmit := make(chan def.Order_button) 		// sjekke om vi trenger buffer
+	newOrder_receive := make(chan def.Order_button)		// sjekke om vi trenger buffer
+	go bcast.Transmitter(16571, newOrder_transmit)
+	go bcast.Receiver(16571, newOrder_receive)
 
 
 	button_pressed := make(chan def.Order_button)
@@ -88,8 +88,8 @@ message_transmit := make(chan def.Network_message)
 	go func(){
 		// bestilling på denne heisen
 		if button def.Order_button := <- button_pressed{
-			new_order_transmit <- button
-			cost = fsm.FSM_button_pressed(button, elevator)
+			newOrder_transmit <- button
+			cost = fsm.FSMButtonPressed(button, elevator)
 
 			var cost_msg def.Cost_message
 			cost_msg.cost = cost
@@ -98,8 +98,8 @@ message_transmit := make(chan def.Network_message)
 			cost_transmit <- cost_msg
 		}
 		// bestilling på annen heis
-		if new_order := <- new_order_receive{
-			cost = fsm.FSM_button_pressed(button, elevator)
+		if newOrder := <- newOrder_receive{
+			cost = fsm.FSMButtonPressed(button, elevator)
 
 			var cost_msg def.Cost_message
 			cost_msg.cost = cost

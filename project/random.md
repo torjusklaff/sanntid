@@ -1,4 +1,4 @@
-FMS_button_pressed():
+FMSButtonPressed():
 
 Eksternt:
 - lys på alle heisene må settes

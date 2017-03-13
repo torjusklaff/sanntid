@@ -18,28 +18,28 @@ import (
 
 func main() {
 
-	door_timer := time.NewTimer(3 * time.Second)
-	door_timer.Stop()
+	DoorTimer := time.NewTimer(3 * time.Second)
+	DoorTimer.Stop()
 
 	var elevator def.Elevator
-	elevator.Last_floor = 1
-	elevator.Current_direction = def.Dir_stop
+	elevator.LastFloor = 1
+	elevator.CurrentDirection = def.DirStop
 	elevator.Queue = [4][3]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
-	elevator.Elevator_state = def.Idle
+	elevator.ElevatorState = def.Idle
 
-	var previous_order def.Order
-	previous_order.Type = def.Buttoncall_internal
-	previous_order.Floor = elevator.Last_floor
-	previous_order.Id = "-"
-	previous_order.Internal = true
+	var previousOrder def.Order
+	previousOrder.Type = def.ButtonInternal
+	previousOrder.Floor = elevator.LastFloor
+	previousOrder.Id = "-"
+	previousOrder.Internal = true
 
 
 	// 		BACKUP KAN NÅ LAGRE TING I FIL, SAMT AT KØ-MODULEN KAN DECODE STRINGS TIL KØ-ARRAYS
-	queue_string := q.Queue_to_string(elevator)
-	backup.To_backup(queue_string)
+	queueString := q.Queue_to_string(elevator)
+	backup.To_backup(queueString)
 
-	string_size := len(queue_string)
-	last_line := backup.Read_last_line(int64(string_size))
+	stringSize := len(queueString)
+	last_line := backup.Read_last_line(int64(stringSize))
 	fmt.Print(last_line)
 
 	go func(){
@@ -61,39 +61,39 @@ func main() {
 
 	// 	CHANNELS 
 	/*
-	n_elevators := make(chan int)
+	numElevators := make(chan int)
 
-	receive_cost := make(chan def.Cost)
-	receive_new_order := make(chan def.Order)
-	receive_remove_order := make(chan def.Order)
+	receiveCost := make(chan def.Cost)
+	receiveNewOrder := make(chan def.Order)
+	receiveRemoveOrder := make(chan def.Order)
 
-	send_cost := make(chan def.Cost)
-	send_new_order := make(chan def.Order)
-	send_remove_order := make(chan def.Order)
-	assigned_new_order := make(chan def.Order)
+	sendCost := make(chan def.Cost)
+	sendNewOrder := make(chan def.Order)
+	sendRemoveOrder := make(chan def.Order)
+	assignedNewOrder := make(chan def.Order)
 
 	button_pressed := make(chan def.Order)
-	on_floor := make(chan int)
+	onFloor := make(chan int)
 
 	id := net.Get_id()
-	go net.Network_init(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order)
-	go arb.Arbitrator_init(elevator, id, receive_new_order, assigned_new_order, receive_cost, send_cost, n_elevators) // button_pressed må endres til receive_new_order
+	go net.Network_init(id, numElevators, receiveCost, receiveNewOrder, receiveRemoveOrder, sendCost, sendNewOrder, sendRemoveOrder)
+	go arb.Arbitrator_init(elevator, id, receiveNewOrder, assignedNewOrder, receiveCost, sendCost, numElevators) // button_pressed må endres til receiveNewOrder
 
-	go driver.Check_all_buttons(send_new_order)
-	go driver.Elevator_on_floor(on_floor, elevator)
+	go driver.Check_all_buttons(sendNewOrder)
+	go driver.Elevator_onFloor(onFloor, elevator)
 
 
 	for {
 		select {
-		case floor := <-on_floor:
-			fsm.FSM_floor_arrival(floor, &elevator, door_timer)
-		case <-door_timer.C:
+		case floor := <-onFloor:
+			fsm.FSMFloor_arrival(floor, &elevator, DoorTimer)
+		case <-DoorTimer.C:
 			fmt.Printf("Timer stopped\n")
 			fsm.FSM_on_door_timeout(&elevator)
-		case new_order := <-assigned_new_order:
+		case newOrder := <-assignedNewOrder:
 			fmt.Print("Assigned new order\n")
-			queue.Enqueue(&elevator, new_order)
-			fsm.FSM_next_order(&elevator, new_order, door_timer)
+			queue.Enqueue(&elevator, newOrder)
+			fsm.FSM_next_order(&elevator, newOrder, DoorTimer)
 		default:
 			break
 		}
