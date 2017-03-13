@@ -80,7 +80,7 @@ func main() {
 	go arb.Arbitrator_init(elevator, id, receiveNewOrder, assignedNewOrder, receiveCost, sendCost, numElevators) // button_pressed må endres til receiveNewOrder
 
 	go driver.Check_all_buttons(sendNewOrder)
-	go driver.Elevator_onFloor(onFloor, elevator)
+	go driver.ElevatorOnFloor(onFloor, elevator)
 
 
 	for {
@@ -89,11 +89,11 @@ func main() {
 			fsm.FSMFloor_arrival(floor, &elevator, DoorTimer)
 		case <-DoorTimer.C:
 			fmt.Printf("Timer stopped\n")
-			fsm.FSM_on_door_timeout(&elevator)
+			fsm.FSMOn_door_timeout(&elevator)
 		case newOrder := <-assignedNewOrder:
 			fmt.Print("Assigned new order\n")
 			queue.Enqueue(&elevator, newOrder)
-			fsm.FSM_next_order(&elevator, newOrder, DoorTimer)
+			fsm.FSM_nextOrder(&elevator, newOrder, DoorTimer)
 		default:
 			break
 		}

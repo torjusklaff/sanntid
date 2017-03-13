@@ -19,16 +19,16 @@ Driver:
 - Set_MotorDirection()
 - Set_button_lamp()
 - SetFloor_indicator()
-- Set_door_open_lamp()
+- Set_doorOpen_lamp()
 - Get_buttonSignal()
 - GetFloor_sensor_signal()
 - Elev_init(): skrur av alle lamper, kjører heisen ned til nærmeste etasje, lager et Elevator-objekt og setter standard verdier på alle struct-elementene
 
 State machine (fsm):
 - FSMFloor_arrival(newFloor): sjekker om den skal stoppe, setter etasje-lys
-- FSM_on_door_timeout(): finner neste direction og setter state
+- FSMOn_door_timeout(): finner neste direction og setter state
 - FSMButtonPressed(Order_button, elevator): setter lys på knapp og returnerer cost regner ut av arbitrator
-- FSM_on_door_timeout(): kjører heisen videre(eller evnt ikke) etter at den er ferdig i en etasje
+- FSMOn_door_timeout(): kjører heisen videre(eller evnt ikke) etter at den er ferdig i en etasje
 - Button_listener(): for-løkke for å sjekke etter knappetrykk
 - Floor_listener(): for-løkke for å se etter floor-sensor-signal
 

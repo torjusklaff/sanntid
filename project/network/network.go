@@ -12,33 +12,37 @@ import (
 )
 
 const (
-	peer_port            = 20100
-	send_order_port      = 20012
-	remove_order_port    = 16572
-	sendCost_port       = 16573
-	globalQueue_port    = 16574
-	ElevatorStates_port = 16575
+	peerPort            = 20100
+	sendOrderPort      = 20012
+	removeOrderPort    = 16572
+	sendCostPort       = 16573
+	globalQueuePort    = 16574
+	elevatorStatesPort = 16575
 	broadcast_time       = 1 * time.Second
 )
+
+type NetworkChannels struct {
+	numElevators 			chan int
+	receiveCost 			chan def.Cost
+	receiveNewOrder 		chan def.Order
+	receiveRemoveOrder 		chan def.Order
+	sendCost 				chan def.Cost
+	sendNewOrder 			chan def.Order
+	sendRemoveOrder 		chan def.Order
+	sendGlobalQueue 		chan [4][2]int
+	receivedGlobalQueue 	chan [4][2]int
+	receivedStates 			chan def.Elevator
+	sendStates 				chan def.Elevator
+}
 
 // Setter opp alle channels og funksjoner i en felles initialisering
 func NetworkInit(
 	id string,
-	numElevators chan int,
-	receiveCost chan def.Cost,
-	receiveNewOrder chan def.Order,
-	receive_remover_order chan def.Order,
-	sendCost chan def.Cost,
-	sendNewOrder chan def.Order,
-	sendRemoveOrder chan def.Order,
-	sendGlobalQueue chan [4][2]int,
-	receivedGlobalQueue chan [4][2]int,
-	receivedStates chan def.Elevator,
-	sendStates chan def.Elevator) {
+	netChannels NetworkChannels) {
 
-	go PeerListener(id, numElevators)
-	go SendMsg(id, sendCost, sendNewOrder, sendRemoveOrder, sendGlobalQueue, sendStates)
-	go ReceiveMsg(receiveCost, receiveNewOrder, receive_remover_order, receivedGlobalQueue, receivedStates)
+	go PeerListener(id, netChannels.numElevators)
+	go SendMsg(id, netChannels)
+	go ReceiveMsg(netChannels)
 }
 
 func GetId() string {
@@ -58,8 +62,8 @@ func GetId() string {
 func PeerListener(id string, numElevators chan int) {
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
-	go peers.Transmitter(peer_port, id, peerTxEnable)
-	go peers.Receiver(peer_port, peerUpdateCh)
+	go peers.Transmitter(peerPort, id, peerTxEnable)
+	go peers.Receiver(peerPort, peerUpdateCh)
 	for {
 		select {
 		case p := <-peerUpdateCh:
@@ -77,77 +81,68 @@ func PeerListener(id string, numElevators chan int) {
 // se main fra network-module gitt på github
 func SendMsg(
 	localIP string,
-	sendCost chan def.Cost,
-	sendNewOrder chan def.Order,
-	sendRemoveOrder chan def.Order,
-	sendGlobalQueue chan [4][2]int,
-	send_ElevatorStates chan def.Elevator) {
+	nc NetworkChannels) {
 
-	bcast_sendCost := make(chan def.Cost)
-	bcast_sendNewOrder := make(chan def.Order)
-	bcast_sendRemoveOrder := make(chan def.Order)
-	bcast_sendGlobalQueue := make(chan [4][2]int)
-	bcast_sendStates := make(chan def.Elevator)
+	bcastSendCost := make(chan def.Cost)
+	bcastSendNewOrder := make(chan def.Order)
+	bcastSendRemoveOrder := make(chan def.Order)
+	bcastSendGlobalQueue := make(chan [4][2]int)
+	bcastSendStates := make(chan def.Elevator)
 
-	go bcast.Transmitter(sendCost_port, bcast_sendCost)
-	go bcast.Transmitter(send_order_port, bcast_sendNewOrder)
-	go bcast.Transmitter(remove_order_port, bcast_sendRemoveOrder)
-	go bcast.Transmitter(globalQueue_port, bcast_sendGlobalQueue)
-	go bcast.Transmitter(ElevatorStates_port, bcast_sendStates)
+	go bcast.Transmitter(sendCostPort, bcastSendCost)
+	go bcast.Transmitter(sendOrderPort, bcastSendNewOrder)
+	go bcast.Transmitter(removeOrderPort, bcastSendRemoveOrder)
+	go bcast.Transmitter(globalQueuePort, bcastSendGlobalQueue)
+	go bcast.Transmitter(elevatorStatesPort, bcastSendStates)
 
 	for {
 		select {
-		case msg := <-sendCost:
+		case msg := <-nc.sendCost:
 			sending := msg
-			bcast_sendCost <- sending
-		case msg := <-sendNewOrder:
+			bcastSendCost <- sending
+		case msg := <-nc.sendNewOrder:
 			sending := msg
-			bcast_sendNewOrder <- sending
-		case msg := <-sendRemoveOrder:
+			bcastSendNewOrder <- sending
+		case msg := <-nc.sendRemoveOrder:
 			sending := msg
-			bcast_sendRemoveOrder <- sending
-		case msg := <-sendGlobalQueue:
+			bcastSendRemoveOrder <- sending
+		case msg := <-nc.sendGlobalQueue:
 			sending := msg
-			bcast_sendGlobalQueue <- sending
-		case msg := <-send_ElevatorStates:
+			bcastSendGlobalQueue <- sending
+		case msg := <-nc.sendElevatorStates:
 			sending := msg
-			bcast_sendStates <- sending
+			bcastSendStates <- sending
 		}
 	}
 }
 
 // Setter opp channels som lytter etter msg fra Send_msg()		(se main fra network-modul)
-func ReceiveMsg(
-	receiveCost chan def.Cost,
-	receiveNewOrder chan def.Order,
-	receive_remover_order chan def.Order,
-	receivedGlobalQueue chan [4][2]int,
-	received_ElevatorStates chan def.Elevator) {
+func ReceiveMsg(nc NetworkChannels) {
 
-	bcast_receiveCost := make(chan def.Cost)
-	bcast_receiveNewOrder := make(chan def.Order)
-	bcast_receiveRemoveOrder := make(chan def.Order)
-	bcast_receive_globalQueue := make(chan [4][2]int)
-	bcast_receive_states := make(chan def.Elevator)
+	bcastReceiveCost := make(chan def.Cost)
+	bcastReceiveNewOrder := make(chan def.Order)
+	bcastReceiveRemoveOrder := make(chan def.Order)
+	bcastReceiveGlobalQueue := make(chan [4][2]int)
+	bcastReceiveStates := make(chan def.Elevator)
 
-	go bcast.Receiver(sendCost_port, bcast_receiveCost)
-	go bcast.Receiver(send_order_port, bcast_receiveNewOrder)
-	go bcast.Receiver(remove_order_port, bcast_receiveRemoveOrder)
-	go bcast.Receiver(globalQueue_port, bcast_receive_globalQueue)
-	go bcast.Receiver(ElevatorStates_port, bcast_receive_states)
+	go bcast.Receiver(sendCostPort, bcastReceiveCost)
+	go bcast.Receiver(sendOrderPort, bcastReceiveNewOrder)
+	go bcast.Receiver(removeOrderPort, bcastReceiveRemoveOrder)
+	go bcast.Receiver(globalQueuePort, bcastReceiveGlobalQueue)
+	go bcast.Receiver(elevatorStatesPort, bcastReceiveStates)
 
 	for {
 		select {
-		case msg := <-bcast_receiveCost:
-			receiveCost <- msg
-		case msg := <-bcast_receiveNewOrder:
-			receiveNewOrder <- msg
-		case msg := <-bcast_receiveRemoveOrder:
-			receive_remover_order <- msg
-		case msg := <-bcast_receive_globalQueue:
-			receivedGlobalQueue <- msg
-		case msg := <-bcast_receive_states:
-			received_ElevatorStates <- msg
+		case msg := <-bcastReceiveCost:
+			nc.receiveCost <- msg
+		case msg := <-bcastReceiveNewOrder:
+			nc.receiveNewOrder <- msg
+		case msg := <-bcastReceiveRemoveOrder:
+			nc.receiveRemoveOrder <- msg
+		case msg := <-bcastReceiveGlobalQueue:
+			nc.receivedGlobalQueue <- msg
+		case msg := <-bcastReceiveStates:
+			nc.receivedStates <- msg
 		}
 	}
 }

@@ -49,7 +49,7 @@ func SetFloorIndicator(floor int) {
 }
 
 func SetDoorOpenLamp(value int) {
-	C.elev_set_door_open_lamp(C.int(value))
+	C.elev_set_doorOpen_lamp(C.int(value))
 }
 
 func GetButtonSignal(button def.Order) int {

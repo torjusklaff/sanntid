@@ -35,40 +35,33 @@ func main() {
 		elevator = driver.ElevInit()
 	}
 
-	fmt.Printf("%v\n", driver.GetFloorSensorSignal())
 
-	var previousOrder def.Order
-	previousOrder.Type = def.ButtonInternal
-	previousOrder.Floor = elevator.LastFloor
 
 	// 	CHANNELS
-	numElevators := make(chan int)
-
-	//errorHandling := make(chan string)
-
-	receiveCost := make(chan def.Cost)
-	receiveNewOrder := make(chan def.Order)
-	receiveRemoveOrder := make(chan def.Order)
-	receivedGlobalQueue := make(chan [4][2]int)
-	receivedStates := make(chan def.Elevator)
-
-	sendCost := make(chan def.Cost)
-	sendNewOrder := make(chan def.Order)
-	sendRemoveOrder := make(chan def.Order)
-	assignedNewOrder := make(chan def.Order)
-	sendGlobalQueue := make(chan [4][2]int)
-	sendStates := make(chan def.Elevator)
+	netChannels := net.NetworkChannels{
+		numElevators: make(chan int),
+		receiveCost: make(chan def.Cost),
+		receiveNewOrder: make(chan def.Order),
+		receiveRemoveOrder: make(chan def.Order),
+		receivedGlobalQueue: make(chan [4][2]int),
+		receivedStates: make(chan def.Elevator),
+		sendCost: make(chan def.Cost),
+		sendNewOrder: make(chan def.Order),
+		sendRemoveOrder: make(chan def.Order),
+		assignedNewOrder: make(chan def.Order),
+		sendGlobalQueue: make(chan [4][2]int),
+		sendStates: make(chan def.Elevator)
+	}
 
 	onFloor := pollFloors()
 	errorHandling := make(chan string)
 
 	id := net.GetId()
 
-	go net.NetworkInit(id, numElevators, receiveCost, receiveNewOrder, receiveRemoveOrder, sendCost, sendNewOrder, sendRemoveOrder, sendGlobalQueue, receivedGlobalQueue, sendStates, receivedStates)
-	go arb.ArbitratorInit(elevator, id, receiveNewOrder, assignedNewOrder, sendStates, receivedStates, numElevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
+	go net.NetworkInit(id, netChannels)
+	go arb.ArbitratorInit(elevator, id, netChannels) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
-	go driver.CheckAllButtons(sendNewOrder, assignedNewOrder)
-	//go driver.Elevator_onFloor(onFloor, elevator)
+	go driver.CheckAllButtons(netChannels)
 
 	go SafeKill()
 
@@ -91,16 +84,13 @@ func main() {
 			sendStates <- elevator
 
 		case <-elevator.DoorTimer.C:
-			fmt.Printf("Timer stopped\n")
-			//queue.ClearGlobalQueue(sendGlobalQueue, allExternalOrders, elevator.LastFloor)
 			fsm.FsmOnDoorTimeout(&elevator)
 
 		case newOrder := <-receiveNewOrder:
-			queue.UpdateGlobalQueue(sendGlobalQueue, allExternalOrders, newOrder)
+			queue.UpdateGlobalQueue(netChannels.sendGlobalQueue, allExternalOrders, newOrder)
 
 		case newOrder := <-assignedNewOrder:
 			if elevator.Queue[newOrder.Floor][int(newOrder.Type)] == 0 {
-				fmt.Print("Assigned new order\n")
 				queue.Enqueue(&elevator, newOrder)
 				fsm.FsmNextOrder(&elevator, newOrder)
 			}
@@ -108,7 +98,6 @@ func main() {
 			allExternalOrders = globalQueue
 
 		case <-elevator.MotorStopTimer.C:
-			fmt.Print("main: detected MotorStop\n")
 			error_message := "MOTORSTOP"
 			errorHandling <- error_message
 			elevator.ElevatorState = def.MotorStop
@@ -128,7 +117,6 @@ func main() {
 			}
 		case <- sendStatesTicker.C:
 			sendStates <- elevator
-			fmt.Printf("Current floor: %v \t Floor sensor: %v\n", elevator.LastFloor, floorSense)
 		default:
 			break
 		}
@@ -140,7 +128,6 @@ func SafeKill() {
 	signal.Notify(c, os.Interrupt)
 	<-c
 	var err = os.Remove("log.txt")
-	fmt.Print("User terminated program.\n\n")
 	driver.SetMotorDirection(def.DirStop)
 
 	for i := 0; i < def.NumFloors; i++ {
@@ -153,6 +140,7 @@ func SafeKill() {
 	log.Fatal("\nUser terminated program.\n")
 
 }
+
 func pollFloors() <-chan int {
 	c := make(chan int)
 	go func() {

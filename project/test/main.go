@@ -28,7 +28,7 @@ func main(){
 
 
 	for {
-		go driver.Elevator_onFloor(onFloor, elevator)
+		go driver.ElevatorOnFloor(onFloor, elevator)
 		go driver.Check_all_buttons(button_pressed)
 		
 		select{
@@ -64,19 +64,19 @@ func main(){
 
 	// We make channels for sending and receiving our custom data types
 message_transmit := make(chan def.Network_message)
-	message_receive := make(chan def.Network_message)
+	messageReceive := make(chan def.Network_message)
 	go bcast.Transmitter(16569, message_transmit)
-	go bcast.Receiver(16569, message_receive)
+	go bcast.Receiver(16569, messageReceive)
 
 	cost_transmit := make(chan def.cost_message)
-	cost_receive := make(chan def.cost_message)
+	costReceive := make(chan def.cost_message)
 	go bcast.Transmitter(16570, cost_transmit)
-	go bcast.Receiver(16570, cost_receive)
+	go bcast.Receiver(16570, costReceive)
 
 	newOrder_transmit := make(chan def.Order_button) 		// sjekke om vi trenger buffer
-	newOrder_receive := make(chan def.Order_button)		// sjekke om vi trenger buffer
+	newOrderReceive := make(chan def.Order_button)		// sjekke om vi trenger buffer
 	go bcast.Transmitter(16571, newOrder_transmit)
-	go bcast.Receiver(16571, newOrder_receive)
+	go bcast.Receiver(16571, newOrderReceive)
 
 
 	button_pressed := make(chan def.Order_button)
@@ -98,7 +98,7 @@ message_transmit := make(chan def.Network_message)
 			cost_transmit <- cost_msg
 		}
 		// bestilling på annen heis
-		if newOrder := <- newOrder_receive{
+		if newOrder := <- newOrderReceive{
 			cost = fsm.FSMButtonPressed(button, elevator)
 
 			var cost_msg def.Cost_message
@@ -112,7 +112,7 @@ message_transmit := make(chan def.Network_message)
 
 	go func() {
 		costs_for_elevators = make(map[string]float32)
-		if received_cost := <- cost_receive{
+		if received_cost := <- costReceive{
 			elem, ok = costs_for_elevators[received_cost.id]
 			if not ok{
 				costs_for_elevators[received_cost.id] = received_cost.cost
@@ -128,7 +128,7 @@ message_transmit := make(chan def.Network_message)
 
 	for {
 		select {
-		case msg := <- message_receive:
+		case msg := <- messageReceive:
 			//det som skjer dersom vi har kontakt med omverdenen
 		case <-time.After(5*time.Second):
 			// det som skjer dersom vi ikke får noe inn på receive-channelen

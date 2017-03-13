@@ -35,20 +35,20 @@ func FsmFloorArrival(newFloor int, elevator *def.Elevator) {
 	}
 }
 
-func FsmNextOrder(elevator *def.Elevator, next_order def.Order) { //arbitrator decides where we should go next
-	driver.SetButtonLamp(next_order, 1)
+func FsmNextOrder(elevator *def.Elevator, nextOrder def.Order) { //arbitrator decides where we should go next
+	driver.SetButtonLamp(nextOrder, 1)
 
 	switch elevator.ElevatorState {
 	case def.Idle:
-		queue.Enqueue(elevator, next_order)
-		if next_order.Floor == elevator.LastFloor {
+		queue.Enqueue(elevator, nextOrder)
+		if nextOrder.Floor == elevator.LastFloor {
 			queue.ClearAtFloor(elevator, elevator.LastFloor)
 			driver.ClearLightsAtFloor(elevator.LastFloor)
 			elevator.DoorTimer.Reset(3 * time.Second)
 			driver.SetDoorOpenLamp(1)
 			elevator.ElevatorState = def.StopOnFloor
 		} else {
-			if next_order.Floor > elevator.LastFloor {
+			if nextOrder.Floor > elevator.LastFloor {
 				elevator.CurrentDirection = def.DirUp
 				driver.SetMotorDirection(elevator.CurrentDirection)
 			} else {
@@ -69,8 +69,8 @@ func FsmNextOrder(elevator *def.Elevator, next_order def.Order) { //arbitrator d
 		driver.ClearLightsAtFloor(elevator.LastFloor)
 		elevator.DoorTimer.Reset(3 * time.Second)
 	case def.MotorStop:
-		if next_order.Type == def.ButtonInternal {
-			queue.Enqueue(elevator, next_order)
+		if nextOrder.Type == def.ButtonInternal {
+			queue.Enqueue(elevator, nextOrder)
 		}
 
 	default:
