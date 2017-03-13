@@ -56,7 +56,7 @@ func ArbitratorInit(
 				fmt.Printf("Add new index and states\n")
 				elev_states[new_states.Id] = new_states
 			}
-
+			fmt.Printf("Length of known elevators with states: %i", len(elev_states))
 			
 		}
 	}
@@ -68,7 +68,6 @@ func orderSelection(
 	cost_list map[string]def.Cost,
 	n_elevators int,
 	localIP string) {
-	fmt.Printf("")
 	lowest_cost := findLowestCost(cost_list)
 	fmt.Printf("Lowest cost calculated\n")
 	// sender
