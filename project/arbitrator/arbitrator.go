@@ -12,7 +12,6 @@ var max_distance int = def.N_floors * def.N_buttons
 // initialiserer arbitratoren sånn at den kan gi ut orders hele tiden
 func ArbitratorInit(
 	e def.Elevator,
-	localIP string,
 	receive_new_order chan def.Order,
 	assigned_new_order chan def.Order,
 	received_states chan def.Elevator,
@@ -20,9 +19,9 @@ func ArbitratorInit(
 	number_of_connected_elevators chan int) {
 	
 	n_elevators := 1
-	elev_states := make(map[string]def.Elevator)
+	elev_states := map[string]def.Elevator{}
 	costs := make(map[string]def.Cost)
-	elev_states[localIP] = e
+	elev_states[e.Id] = e
 	for {
 		select {
 		case elevators := <-number_of_connected_elevators:
@@ -39,24 +38,26 @@ func ArbitratorInit(
 				for elevator_id := range elev_states{
 					costs[elevator_id] = def.Cost{Cost: costFunction(elev_states[elevator_id], current_new_order), Current_order: current_new_order, Id: elevator_id}
 				}
-				orderSelection(assigned_new_order, costs, n_elevators, localIP)
+				orderSelection(assigned_new_order, costs, n_elevators, e.Id)
 
 			}
 		case new_states := <-received_states:
 			id_in_list := false
+			num_in_elev_states := 0
 			for known_ids, _ := range elev_states{
 				fmt.Printf("ID: %s \n",known_ids)
 				if new_states.Id == known_ids{
-					fmt.Printf("Update states for ID %s\n",new_states.Id)
+					fmt.Printf("Update states for ID %v\n",known_ids)
 					id_in_list = true
 					elev_states[known_ids]=new_states
 				}
+				num_in_elev_states +=1
 			}
 			if !id_in_list{
-				fmt.Printf("Add new index and states\n")
+				//fmt.Printf("Add new index and states\n")
 				elev_states[new_states.Id] = new_states
 			}
-			fmt.Printf("Length of known elevators with states: %i \n", len(elev_states))
+			fmt.Printf("Length of known elevators with states: %v \n", num_in_elev_states)
 			
 		}
 	}

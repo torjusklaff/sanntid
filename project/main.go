@@ -60,10 +60,10 @@ func main() {
 	on_floor := pollFloors()
 	error_handling := make(chan string)
 
-	id := net.GetId()
+	elevator.Id = net.GetId()
 
-	go net.NetworkInit(id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue, send_states, received_states)
-	go arb.ArbitratorInit(elevator, id, receive_new_order, assigned_new_order, send_states, received_states, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
+	go net.NetworkInit(elevator.Id, n_elevators, receive_cost, receive_new_order, receive_remove_order, send_cost, send_new_order, send_remove_order, send_global_queue, received_global_queue, send_states, received_states)
+	go arb.ArbitratorInit(elevator, receive_new_order, assigned_new_order, send_states, received_states, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
 	go driver.CheckAllButtons(send_new_order, assigned_new_order)
 	//go driver.Elevator_on_floor(on_floor, elevator)
@@ -120,6 +120,7 @@ func main() {
 				def.Restart.Run()
 			}
 		case <- send_states_ticker.C:
+			fmt.Printf("Id on what we send: %s \n", elevator.Id)
 			send_states <- elevator
 		default:
 			break
