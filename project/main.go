@@ -22,6 +22,7 @@ func main() {
 
 	test_timer := time.NewTimer(1 * time.Second)
 	//test_timer.Stop()
+	send_states_ticker := time.NewTicker(100*time.Millisecond)
 
 	var elevator def.Elevator
 	if _, err := os.Stat("log.txt"); err == nil {
@@ -87,6 +88,7 @@ func main() {
 		select {
 		case floor := <-on_floor:
 			fsm.FsmFloorArrival(floor, &elevator)
+			send_states <- elevator
 
 		case <-elevator.Door_timer.C:
 			fmt.Printf("Timer stopped\n")
@@ -124,10 +126,9 @@ func main() {
 			if err == "PROGRAM_CRASH" {
 				def.Restart.Run()
 			}
-		case <-test_timer.C:
-
+		case <- send_states_ticker.C:
+			send_states <- elevator
 			fmt.Printf("Current floor: %v \t Floor sensor: %v\n", elevator.Last_floor, floor_sense)
-			test_timer.Reset(1 * time.Second)
 		default:
 			break
 		}

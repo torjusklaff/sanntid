@@ -9,20 +9,18 @@ import (
 
 var max_distance int = def.N_floors * def.N_buttons
 
-func costFunction(elevator def.Elevator, order def.Order) float64 {
-	difference := order.Floor - elevator.Last_floor
-	cost := math.Abs(float64(difference)) + movementPenalty(elevator.Elevator_state, elevator.Current_direction, difference) + turnPenalty(elevator.Elevator_state, elevator.Last_floor, elevator.Current_direction, order.Floor) + orderDirectionPenalty(elevator.Current_direction, order.Floor, order.Type)
+func costFunction(e def.Elevator, order def.Order) float64 {
+	diff := order.Floor - e.Last_floor
+	cost := math.Abs(float64(diff)) + movementPenalty(e.Elevator_state, e.Current_direction, diff) + turnPenalty(e.Elevator_state, e.Last_floor, e.Current_direction, order.Floor) + orderDirectionPenalty(e.Current_direction, order.Floor, order.Type)
 	return cost
 }
 
-func arbitratorOptimalNextOrder() {
-	//enten lag eller ta inn en liste med alle bestillinger, send top til fsm_next_order
-}
 
-func findLowestCost(costs [def.N_elevators]def.Cost) def.Cost {
-	for i := 0; i < len(costs)-1; i++ {
-		if costs[i+1].Cost < costs[i].Cost {
-			temp := costs[i]
+func findLowestCost(costs map[string]def.Cost) def.Cost {
+	lowest_cost := math.Inf(+1)
+	for cost := range costs {
+		if cost.Cost < lowest_cost {
+			lowest_cost = cost.Cost
 			costs[i] = costs[i+1]
 			costs[i+1] = temp
 		}
@@ -47,9 +45,9 @@ func ArbitratorInit(
 	send_states chan def.Elevator,
 	number_of_connected_elevators chan int) {
 
-	elev_states := make(map[string][]def.Elevator)
+	elev_states := make(map[string]def.Elevator)
 	n_elevators := 1
-
+	costs := make(map[string]def.Cost)
 	for {
 		select {
 		case elevators := <-number_of_connected_elevators:
@@ -61,13 +59,15 @@ func ArbitratorInit(
 			if (current_new_order.Type == def.Buttoncall_internal) || (n_elevators == 1) {
 				assigned_new_order <- current_new_order
 			} else {
-				//current_cost := def.Cost{Cost: costFunction(e, current_new_order), Current_order: current_new_order, Id: localIP}
-				//orderSelection(assigned_new_order, receive_cost, n_elevators, current_cost, localIP)
-				//if current_new_order.Floor == 3 || current_new_order.Type == def.Buttoncall_up {
-				//	assigned_new_order <- current_new_order
+				
+				for elevator_id := range elev_states{
+					costs[elevator_id] = def.Cost{Cost: costFunction(elev_states[elevator_id], current_new_order), Current_order: current_new_order, Id: elevator_id}
+				}
+				orderSelection(assigned_new_order, costs, n_elevators, localIP)
+
 			}
 		case new_states := <-received_states:
-			elev_states[new_states.Id] = append(elev_states[new_states.Id], new_states)
+			elev_states[new_states.Id] = new_states
 		}
 	}
 }
@@ -75,33 +75,10 @@ func ArbitratorInit(
 // Bestemmer om current heis skal ta bestillingen eller ikke, sender da på assigned_new_order
 func orderSelection(
 	assigned_new_order chan<- def.Order,
-	receive_cost <-chan def.Cost,
+	cost_list map[string]def.Cost,
 	n_elevators int,
-	current_cost def.Cost,
 	localIP string) {
 
-	var cost_list [def.N_elevators]def.Cost
-
-	for i := 0; i < def.N_elevators; i++ {
-		cost_list[i] = def.Cost{math.Inf(+1), current_cost.Current_order, current_cost.Id}
-	}
-
-	/*switch n_elevators {
-	case 1:
-		cost_list[0] = current_cost
-	case 2:
-		new_cost := <-receive_cost
-		cost_list[0] = current_cost
-		cost_list[1] = new_cost
-	case 3:
-		new_cost := <-receive_cost
-		new_cost2 := <-receive_cost
-		cost_list[0] = current_cost
-		cost_list[1] = new_cost
-		cost_list[2] = new_cost2
-	}*/
-
-	// regner ut laveste kost av de aktive heisene
 	lowest_cost := findLowestCost(cost_list)
 
 	// sender
