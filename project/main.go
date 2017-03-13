@@ -25,6 +25,7 @@ func main() {
 	sendStatesTicker := time.NewTicker(100*time.Millisecond)
 
 	var elevator def.Elevator
+
 	if _, err := os.Stat("log.txt"); err == nil {
 		elevator = driver.ElevInitFromBackup()
 		var dummyOrder def.Order
@@ -34,6 +35,11 @@ func main() {
 	} else {
 		elevator = driver.ElevInit()
 	}
+
+	var dummyOrder def.Order
+	dummyOrder.Floor = 1
+	dummyOrder.Type = def.ButtonInternal
+	fsm.FsmNextOrder(&elevator, dummyOrder)
 
 
 
@@ -61,7 +67,7 @@ func main() {
 	go net.NetworkInit(id, netChannels)
 	go arb.ArbitratorInit(elevator, id, netChannels) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
-	go driver.CheckAllButtons(netChannels)
+	go driver.CheckAllButtons(netChannels.sendNewOrder, netChannels.assignedNewOrder)
 
 	go SafeKill()
 

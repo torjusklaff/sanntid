@@ -86,7 +86,6 @@ func GetFloorSensorSignal() int {
 func ElevatorOnFloor(onFloor chan int, elevator def.Elevator) {
 	for {
 		if (GetFloorSensorSignal() != elevator.LastFloor) && (GetFloorSensorSignal() != -1) {
-
 			onFloor <- GetFloorSensorSignal()
 		}
 	}
@@ -102,20 +101,12 @@ func ClearLightsAtFloor(floor int) {
 }
 
 func ElevInit() def.Elevator {
-	SetMotorDirection(def.DirStop)
 	C.elev_init()
-	//clear_all_lamps()
-
 	SetMotorDirection(def.DirDown)
 
-	it := 0
 	for GetFloorSensorSignal() == -1 {
-		it += 1
-		if it == 100000 {
-			SetMotorDirection(def.DirUp)
-		}
 	}
-	fmt.Printf("Found floor in init\n")
+
 	SetMotorDirection(def.DirStop)
 	SetFloorIndicator(GetFloorSensorSignal())
 
@@ -133,14 +124,12 @@ func ElevInit() def.Elevator {
 	elev.DoorTimer = DoorTimer
 	elev.MotorStopTimer = MotorStopTimer
 
+	if _, err := os.Stat("log.txt"); err == nil {
+		lastQueue := backup.ReadLastLine(24)
+		elev.Queue = backup.QueueFromString(lastQueue)
+	}
+
 	return elev
 }
 
-func ElevInitFromBackup() def.Elevator {
-	elev := ElevInit()
 
-	lastQueue := backup.ReadLastLine(24)
-	fmt.Print(lastQueue)
-	elev.Queue = backup.QueueFromString(lastQueue)
-	return elev
-}

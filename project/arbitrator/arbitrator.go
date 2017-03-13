@@ -2,6 +2,7 @@ package arbitrator
 
 import (
 	def "../definitions"
+	net "../network"
 	"fmt"
 	"math"
 	"strings"
@@ -39,34 +40,30 @@ func findLowestCost(costs map[string]def.Cost) def.Cost {
 func ArbitratorInit(
 	e def.Elevator,
 	localIP string,
-	receiveNewOrder chan def.Order,
-	assignedNewOrder chan def.Order,
-	receivedStates chan def.Elevator,
-	sendStates chan def.Elevator,
-	numberOfConnectedElevators chan int) {
+	nc net.NetworkChannels) {
 
 	elevatorStates := make(map[string]def.Elevator)
 	numElevators := 1
 	costs := make(map[string]def.Cost)
 	for {
 		select {
-		case elevators := <-numberOfConnectedElevators:
+		case elevators := <-nc.numElevators:
 			numElevators = elevators
 			fmt.Printf("Number of elevators: %v \n", numElevators)
-		case currentNewOrder := <-receiveNewOrder:
+		case currentNewOrder := <-nc.receiveNewOrder:
 			fmt.Printf("We receive a new order\n")
-			sendStates <- e
+			nc.sendStates <- e
 			if (currentNewOrder.Type == def.ButtonInternal) || (numElevators == 1) {
-				assignedNewOrder <- currentNewOrder
+				nc.assignedNewOrder <- currentNewOrder
 			} else {
 				
 				for elevatorID := range elevatorStates{
 					costs[elevatorID] = def.Cost{Cost: costFunction(elevatorStates[elevatorID], currentNewOrder), CurrentOrder: currentNewOrder, Id: elevatorID}
 				}
-				orderSelection(assignedNewOrder, costs, numElevators, localIP)
+				orderSelection(nc.assignedNewOrder, costs, numElevators, localIP)
 
 			}
-		case newStates := <-receivedStates:
+		case newStates := <-nc.receivedStates:
 			elevatorStates[newStates.Id] = newStates
 		}
 	}
