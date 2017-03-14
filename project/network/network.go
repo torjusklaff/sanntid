@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	/*"strings"*/
 )
 
 const (
@@ -31,7 +32,35 @@ func NetworkInit(
 	send_global_queue chan [4][2]int,
 	received_global_queue chan [4][2]int,
 	send_states chan def.Elevator,
-	received_states chan def.Elevator) {
+	received_states chan def.Elevator
+	/*elevatorDisconnected chan bool*/) {
+
+
+	// FORSLAG: Denne koden vil forhåpentligvis gjøre sånn at id-en til heisen alltid er oppdatert (altså endres om heisen disconnecter fra nett)
+	/* var id string
+	go func(){
+		for{
+			flag.StringVar(&id, "id", "", "id of this peer")
+			flag.Parse()
+			localIP, err := localip.LocalIP()
+			if err != nil {
+				fmt.Println(err)
+				localIP = "DISCONNECTED"
+			}
+			id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
+		}
+	}()
+
+	elevator.Id = id
+	*/
+
+	//Så kan man feks sende ut en beskjed på en channel at heisen er frakoblet, slik:
+	/*
+	if strings.Contains(id, "DISCONNECTED"){
+		elevatorDisconnected <- true
+	}
+	*/
+	//PS: Dette funker bare om man kun sender til channelen dersom den er frakoblet
 
 	go PeerListener(id, n_elevators)
 	go SendMsg(id, send_new_order, send_remove_order, send_global_queue, send_states)
