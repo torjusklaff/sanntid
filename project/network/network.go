@@ -15,7 +15,7 @@ const (
 	peer_port         = 20100
 	send_order_port   = 20012
 	remove_order_port = 16572
-	states_port       = 16573
+	states_port       = 30500
 	global_queue_port = 16574
 	broadcast_time    = 1 * time.Second
 )
@@ -32,8 +32,8 @@ func NetworkInit(
 	send_remove_order chan def.Order,
 	send_global_queue chan [4][2]int,
 	received_global_queue chan [4][2]int,
-	send_states chan def.Elevator,
-	received_states chan def.Elevator) {
+	send_states chan def.Elevator_msg,
+	received_states chan def.Elevator_msg) {
 
 	// FORSLAG: Denne koden vil forhåpentligvis gjøre sånn at id-en til heisen alltid er oppdatert (altså endres om heisen disconnecter fra nett)
 	// Dersom den mister nett får den staten "NotConnected", og dersom den får tilbake nettet går den til Idle
@@ -104,12 +104,12 @@ func SendMsg(
 	send_new_order chan def.Order,
 	send_remove_order chan def.Order,
 	send_global_queue chan [4][2]int,
-	send_states chan def.Elevator) {
+	send_states chan def.Elevator_msg) {
 
 	bcast_send_new_order := make(chan def.Order)
 	bcast_send_remove_order := make(chan def.Order)
 	bcast_send_global_queue := make(chan [4][2]int)
-	bcast_send_states := make(chan def.Elevator, 100)
+	bcast_send_states := make(chan def.Elevator_msg, 100)
 
 	go bcast.Transmitter(send_order_port, bcast_send_new_order)
 	go bcast.Transmitter(remove_order_port, bcast_send_remove_order)
@@ -141,12 +141,12 @@ func ReceiveMsg(
 	receive_new_order chan def.Order,
 	receive_remover_order chan def.Order,
 	received_global_queue chan [4][2]int,
-	received_states chan def.Elevator) {
+	received_states chan def.Elevator_msg) {
 
 	bcast_receive_new_order := make(chan def.Order)
 	bcast_receive_remove_order := make(chan def.Order)
 	bcast_receive_global_queue := make(chan [4][2]int)
-	bcast_receive_states := make(chan def.Elevator, 100)
+	bcast_receive_states := make(chan def.Elevator_msg, 100)
 
 	go bcast.Receiver(send_order_port, bcast_receive_new_order)
 	go bcast.Receiver(remove_order_port, bcast_receive_remove_order)
@@ -162,10 +162,7 @@ func ReceiveMsg(
 		case msg := <-bcast_receive_global_queue:
 			received_global_queue <- msg
 		case msg := <-bcast_receive_states:
-			if msg.Id != LocalIP && len(msg.Id) > 0 {
-				fmt.Printf("Floor of what  we receive: %v \n", msg.Last_floor)
-				received_states <- msg
-			}
+			received_states <- msg
 		}
 	}
 }

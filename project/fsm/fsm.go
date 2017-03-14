@@ -29,15 +29,15 @@ func FsmFloorArrival(new_floor int, elevator *def.Elevator) {
 			}
 			break
 		/*case def.NotConnected:
-			if queue.ShouldStop(*elevator) {
-				driver.SetMotorDirection(def.DirStop)
-				queue.DeleteInternalQueuesAtFloor(elevator, newFloor)
-				driver.ClearLightsAtFloor(elevator.LastFloor)
-				driver.SetDoorOpenLamp(1)
-				elevator.DoorTimer.Reset(3 * time.Second)
-			}
-			break
-			*/
+		if queue.ShouldStop(*elevator) {
+			driver.SetMotorDirection(def.DirStop)
+			queue.DeleteInternalQueuesAtFloor(elevator, newFloor)
+			driver.ClearLightsAtFloor(elevator.LastFloor)
+			driver.SetDoorOpenLamp(1)
+			elevator.DoorTimer.Reset(3 * time.Second)
+		}
+		break
+		*/
 		case def.Idle:
 		default:
 			break
@@ -78,31 +78,33 @@ func FsmNextOrder(elevator *def.Elevator, next_order def.Order) { //arbitrator d
 	case def.Moving:
 		break
 	case def.Stop_on_floor:
-		queue.ClearAtFloor(elevator, elevator.Last_floor)
-		driver.ClearLightsAtFloor(elevator.Last_floor)
-		elevator.Door_timer.Reset(3 * time.Second)
+		if next_order.Floor == elevator.Last_floor {
+			queue.ClearAtFloor(elevator, elevator.Last_floor)
+			driver.ClearLightsAtFloor(elevator.Last_floor)
+			elevator.Door_timer.Reset(3 * time.Second)
+		}
 	case def.Motor_stop:
 		if next_order.Type == def.Buttoncall_internal {
 			queue.Enqueue(elevator, next_order)
 		}
 	/*case def.NotConnected:
-		queue.Enqueue(elevator, nextOrder)
-		if nextOrder.Floor == elevator.LastFloor {
-			queue.DeleteInternalQueuesAtFloor(elevator, elevator.LastFloor)
-			driver.ClearLightsAtFloor(elevator.LastFloor)
-			elevator.DoorTimer.Reset(3 * time.Second)
-			driver.SetDoorOpenLamp(1)
+	queue.Enqueue(elevator, nextOrder)
+	if nextOrder.Floor == elevator.LastFloor {
+		queue.DeleteInternalQueuesAtFloor(elevator, elevator.LastFloor)
+		driver.ClearLightsAtFloor(elevator.LastFloor)
+		elevator.DoorTimer.Reset(3 * time.Second)
+		driver.SetDoorOpenLamp(1)
+	} else {
+		if nextOrder.Floor > elevator.LastFloor {
+			elevator.CurrentDirection = def.DirUp
+			driver.SetMotorDirection(elevator.CurrentDirection)
+			elevator.MotorStopTimer.Reset(4 * time.Second)
 		} else {
-			if nextOrder.Floor > elevator.LastFloor {
-				elevator.CurrentDirection = def.DirUp
-				driver.SetMotorDirection(elevator.CurrentDirection)
-				elevator.MotorStopTimer.Reset(4 * time.Second)
-			} else {
-				elevator.CurrentDirection = def.DirDown
-				driver.SetMotorDirection(elevator.CurrentDirection)
-				elevator.MotorStopTimer.Reset(4 * time.Second)
-			}
-		}*/
+			elevator.CurrentDirection = def.DirDown
+			driver.SetMotorDirection(elevator.CurrentDirection)
+			elevator.MotorStopTimer.Reset(4 * time.Second)
+		}
+	}*/
 	default:
 		break
 	}
@@ -139,13 +141,13 @@ func FsmOnDoorTimeout(elevator *def.Elevator) {
 		}
 		break
 	/*case def.NotConnected:
-		elevator.CurrentDirection = queue.ChooseDirection(*elevator)
-		driver.SetMotorDirection(elevator.CurrentDirection)
+	elevator.CurrentDirection = queue.ChooseDirection(*elevator)
+	driver.SetMotorDirection(elevator.CurrentDirection)
 
-		if !(elevator.CurrentDirection == def.DirStop) {
-			elevator.MotorStopTimer.Reset(8 * time.Second)
-		}
-		break*/
+	if !(elevator.CurrentDirection == def.DirStop) {
+		elevator.MotorStopTimer.Reset(8 * time.Second)
+	}
+	break*/
 	default:
 		break
 	}

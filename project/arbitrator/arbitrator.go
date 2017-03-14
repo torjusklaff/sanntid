@@ -14,13 +14,12 @@ func ArbitratorInit(
 	e def.Elevator,
 	receive_new_order chan def.Order,
 	assigned_new_order chan def.Order,
-	received_states chan def.Elevator,
-	number_of_connected_elevators chan int) {
+	//received_states chan def.Elevator,
+	number_of_connected_elevators chan int,
+	elev_states map[string]def.Elevator_msg) {
 
 	n_elevators := 1
-	elev_states := map[string]def.Elevator{}
 	costs := make(map[string]def.Cost)
-	elev_states[e.Id] = e
 	for {
 		select {
 		case elevators := <-number_of_connected_elevators:
@@ -36,20 +35,12 @@ func ArbitratorInit(
 					elev_states[e.Id]= e
 					elev_states[new_states.Id] = new_states
 				*/ //FORSLAG: fjerne disse linjene da de kan skape en sleep
-				for elevator_id := range elev_states {
+				for elevator_id, _ := range elev_states {
 					costs[elevator_id] = def.Cost{Cost: costFunction(elev_states[elevator_id], current_new_order), Current_order: current_new_order, Id: elevator_id}
 				}
-				fmt.Printf("get through here\n")
 				orderSelection(assigned_new_order, costs, n_elevators, e.Id)
 
 			}
-		case new_states := <-received_states:
-			elev_states[e.Id] = e
-			elev_states[new_states.Id] = new_states
-			for elevators, _ := range elev_states {
-				fmt.Printf("We have these Id's: %s \n", elevators)
-			}
-			fmt.Println("\n \n \n")
 		}
 	}
 }
@@ -72,7 +63,7 @@ func orderSelection(
 	}
 }
 
-func costFunction(e def.Elevator, order def.Order) float64 {
+func costFunction(e def.Elevator_msg, order def.Order) float64 {
 	diff := order.Floor - e.Last_floor
 	cost := math.Abs(float64(diff)) + movementPenalty(e.Elevator_state, e.Current_direction, diff) + turnPenalty(e.Elevator_state, e.Last_floor, e.Current_direction, order.Floor) + orderDirectionPenalty(e.Current_direction, order.Floor, order.Type)
 	return cost
@@ -80,11 +71,11 @@ func costFunction(e def.Elevator, order def.Order) float64 {
 
 func findLowestCost(costs map[string]def.Cost) def.Cost { //Problemet er inni her!!!!!!!!!!
 	dummy_order := def.Order{Type: 0, Floor: 0, Internal: false, Id: " "}
-	lowest_cost := def.Cost{Cost: math.Inf(+1), Current_order: dummy_order, Id: " "}
+	lowest_cost := def.Cost{Cost: math.Inf(+1), Current_order: dummy_order, Id: "i am stupid"}
+
 	for Id, cost := range costs {
 		if cost.Cost < lowest_cost.Cost {
 			lowest_cost = cost
-			fmt.Printf("New lowest cost\n")
 		}
 		if cost.Cost == lowest_cost.Cost {
 			if splitIP(Id) < splitIP(lowest_cost.Id) {
