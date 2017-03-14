@@ -4,6 +4,8 @@ import (
 	arb "./arbitrator"
 	def "./definitions"
 	net "./network"
+	"./fsm"
+	"./driver"
 )
 
 func main() {
