@@ -9,7 +9,7 @@ import (
 
 var maxDistance int = def.NFloors * def.NButtons
 
-// initialiserer arbitratoren sånn at den kan gi ut orders hele tiden
+
 func ArbitratorInit(e def.Elevator, ch def.Channels) {
 	
 	numberOfConnectedElevators := 1
@@ -39,7 +39,7 @@ func ArbitratorInit(e def.Elevator, ch def.Channels) {
 	}
 }
 
-// Bestemmer om current heis skal ta bestillingen eller ikke, sender da på AssignedNewOrder
+
 func orderSelection(
 	AssignedNewOrder chan<- def.Order,
 	costList map[string]def.Cost,
@@ -48,7 +48,7 @@ func orderSelection(
 
 	lowestCost := findLowestCost(costList)
 	fmt.Printf("Lowest cost calculated\n")
-	// sender
+
 	if lowestCost.Id == localIP {
 		fmt.Printf("We took the order!\n")
 		AssignedNewOrder <- lowestCost.CurrentOrder
@@ -58,7 +58,7 @@ func orderSelection(
 	}
 }
 
-//hjelpefunksjon for å velge hvis cost er lik
+
 func splitIP(IP string) string {
 	s := strings.Split(IP, ".")
 	return s[3]
@@ -114,7 +114,7 @@ func costFunction(e def.Elevator, order def.Order) float64 {
 }
 
 
-func findLowestCost(costs map[string]def.Cost) def.Cost { //Problemet er inni her!!!!!!!!!!
+func findLowestCost(costs map[string]def.Cost) def.Cost {
 	dummyOrder := def.Order{Type: 0, Floor: 0, Internal: false, Id: " "}
 	lowestCost:= def.Cost{Cost: math.Inf(+1), CurrentOrder: dummyOrder, Id: " "}
 	for Id, cost := range costs {
@@ -126,6 +126,6 @@ func findLowestCost(costs map[string]def.Cost) def.Cost { //Problemet er inni he
 				lowestCost = cost
 			}
 		}
-	}//Skjer i for løkka at det blir index out of range. FOr sliten til å fikse nå, se gjerne på det selv hvis du får to heiser
+	}
 	return lowestCost
 }

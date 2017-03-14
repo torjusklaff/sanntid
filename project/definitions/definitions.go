@@ -65,12 +65,6 @@ type Elevator struct {
 	CurrentOrder     Order
 }
 
-/*type ElevatorMsg struct {
-	LastFloor        int
-	CurrentDirection MotorDirection
-	ElevatorState    ElevStates
-	Id                string
-}*/
 
 type Cost struct {
 	Cost          float64

@@ -21,7 +21,7 @@ const (
 	broadcastTime      = 1 * time.Second
 )
 
-// Setter opp alle channels og funksjoner i en felles initialisering
+
 func NetworkInit(elevator *def.Elevator, ch def.Channels) {
 
 	var id string

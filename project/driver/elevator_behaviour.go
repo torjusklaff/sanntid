@@ -51,33 +51,27 @@ func ClearLightsAtFloor(floor int) {
 func ElevatorInit() def.Elevator {
 	SetMotorDirection(def.DirStop)
 	C.ElevatorInit()
-	//clearAllLamps()
-
 	SetMotorDirection(def.DirDown)
 
-	it := 0
 	for FloorSensorSignal() == -1 {
-		it += 1
-		if it == 100000 {
-			SetMotorDirection(def.DirUp)
-		}
 	}
+	
 	SetMotorDirection(def.DirStop)
 	SetFloorIndicator(FloorSensorSignal())
 
-	// Initializing an elevator-object
 	doorTimer := time.NewTimer(3 * time.Second)
 	doorTimer.Stop()
 	motorStopTimer := time.NewTimer(10 * time.Second)
 	motorStopTimer.Stop()
 
-	var elev def.Elevator
-	elev.LastFloor = FloorSensorSignal()
-	elev.CurrentDirection = def.DirStop
-	elev.Queue = [4][3]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
-	elev.ElevatorState = def.Idle
-	elev.DoorTimer = doorTimer
-	elev.MotorStopTimer = motorStopTimer
+	elev := def.Elevator{
+		LastFloor: FloorSensorSignal(),
+		CurrentDirection: def.DirStop,
+		Queue: [4][3]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+		ElevatorState: def.Idle,
+		DoorTimer: doorTimer,
+		MotorStopTimer: motorStopTimer
+	}
 
 	if _, err := os.Stat("log.txt"); err == nil {
 		lastQueue := backup.ReadLastLine(24)

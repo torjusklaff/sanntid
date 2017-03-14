@@ -42,7 +42,7 @@ func FsmFloorArrival(newFloor int, elevator *def.Elevator, allExternalOrders [4]
 	}
 }
 
-func FsmNextOrder(elevator *def.Elevator, nextOrder def.Order) { //arbitrator decides where we should go next
+func FsmNextOrder(elevator *def.Elevator, nextOrder def.Order) {
 	driver.SetButtonLamp(nextOrder, 1)
 
 	switch elevator.ElevatorState {
