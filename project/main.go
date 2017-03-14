@@ -117,6 +117,12 @@ func main() {
 			if err == "PROGRAM_CRASH" {
 				def.Restart.Run()
 			}
+			/*if err == "DISCONNECTED"{
+				driver.StopButton(1)
+			}
+			if err == "CONNECTED"{
+				driver.StopButton(0)
+			}*/
 		case <- send_states_ticker.C:
 			send_states <- elevator
 		/* case <- elevatorDisconnected:

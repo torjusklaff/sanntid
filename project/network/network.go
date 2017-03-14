@@ -49,9 +49,11 @@ func NetworkInit(
 				fmt.Println(err)
 				localIP = "DISCONNECTED"
 				elevator.ElevatorState = def.NotConnected
+				ch.errorHandling <- "DISCONNECTED"
 			}
 			if (err == nil) && (elevator.ElevatorState == def.NotConnected){
 				elevator.ElevatorState == def.Idle
+				ch.errorHandling <- "CONNECTED"
 			}
 			id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 		}

@@ -145,3 +145,8 @@ func ElevInitFromBackup() def.Elevator {
 	elev.Queue = backup.QueueFromString(last_queue)
 	return elev
 }
+
+/*func StopButton(value int){
+	C.elev_set_stop_lamp(value)
+}
+*/

@@ -28,6 +28,16 @@ func FsmFloorArrival(new_floor int, elevator *def.Elevator) {
 				elevator.Elevator_state = def.Stop_on_floor
 			}
 			break
+		/*case def.NotConnected:
+			if queue.ShouldStop(*elevator) {
+				driver.SetMotorDirection(def.DirStop)
+				queue.DeleteInternalQueuesAtFloor(elevator, newFloor)
+				driver.ClearLightsAtFloor(elevator.LastFloor)
+				driver.SetDoorOpenLamp(1)
+				elevator.DoorTimer.Reset(3 * time.Second)
+			}
+			break
+			*/
 		case def.Idle:
 		default:
 			break
@@ -75,7 +85,24 @@ func FsmNextOrder(elevator *def.Elevator, next_order def.Order) { //arbitrator d
 		if next_order.Type == def.Buttoncall_internal {
 			queue.Enqueue(elevator, next_order)
 		}
-
+	/*case def.NotConnected:
+		queue.Enqueue(elevator, nextOrder)
+		if nextOrder.Floor == elevator.LastFloor {
+			queue.DeleteInternalQueuesAtFloor(elevator, elevator.LastFloor)
+			driver.ClearLightsAtFloor(elevator.LastFloor)
+			elevator.DoorTimer.Reset(3 * time.Second)
+			driver.SetDoorOpenLamp(1)
+		} else {
+			if nextOrder.Floor > elevator.LastFloor {
+				elevator.CurrentDirection = def.DirUp
+				driver.SetMotorDirection(elevator.CurrentDirection)
+				elevator.MotorStopTimer.Reset(4 * time.Second)
+			} else {
+				elevator.CurrentDirection = def.DirDown
+				driver.SetMotorDirection(elevator.CurrentDirection)
+				elevator.MotorStopTimer.Reset(4 * time.Second)
+			}
+		}*/
 	default:
 		break
 	}
@@ -111,6 +138,14 @@ func FsmOnDoorTimeout(elevator *def.Elevator) {
 			fmt.Print("FSM_on_door_timeout: Reset motor_timer\n")
 		}
 		break
+	/*case def.NotConnected:
+		elevator.CurrentDirection = queue.ChooseDirection(*elevator)
+		driver.SetMotorDirection(elevator.CurrentDirection)
+
+		if !(elevator.CurrentDirection == def.DirStop) {
+			elevator.MotorStopTimer.Reset(8 * time.Second)
+		}
+		break*/
 	default:
 		break
 	}
@@ -154,15 +189,4 @@ func FsmMotorStop(elevator *def.Elevator) def.Elevator {
 
 	elev := driver.ElevInitFromBackup()
 	return elev
-
-	/*dead := true
-	for dead{
-		driver.Set_motor_direction(def.Dir_down)
-		if driver.Get_floor_sensor_signal() != -1 {
-			fmt.Print(int(driver.Get_floor_sensor_signal()))
-			driver.Set_motor_direction(def.Dir_stop)
-			dead = false
-		}
-
-	}*/
 }

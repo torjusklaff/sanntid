@@ -51,6 +51,7 @@ const (
 	Stop_on_floor             //Not really necessary, look into it (Change to On_floor)
 	Moving
 	Motor_stop
+	/*NotConnected*/
 )
 
 type Elevator struct {
