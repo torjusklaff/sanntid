@@ -30,10 +30,12 @@ func ArbitratorInit(
 			if (n_elevators == 1) {
 				fmt.Printf("We are alone, we get the order!\n")
 				assigned_new_order <- current_new_order
-			} else {	
+			} else {
+				/*	
 				new_states := <-received_states
 				elev_states[e.Id]= e
 				elev_states[new_states.Id] = new_states
+				*/ 												//FORSLAG: fjerne disse linjene da de kan skape en sleep
 				for elevator_id := range elev_states{
 					costs[elevator_id] = def.Cost{Cost: costFunction(elev_states[elevator_id], current_new_order), Current_order: current_new_order, Id: elevator_id}
 				}
