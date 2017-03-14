@@ -16,23 +16,18 @@ func ArbitratorInit(e def.Elevator, ch def.Channels) {
 	elevStates := map[string]def.Elevator{}
 	costs := make(map[string]def.Cost)
 	elevStates[e.Id] = e
+
 	for {
 		select {
 		case elevators := <-ch.numElevators:
 			numberOfConnectedElevators = elevators
-			fmt.Printf("Number of elevators: %v \n", numberOfConnectedElevators)
-		case currentNewOrder := <-receiveNewOrder:
+		case currentNewOrder := <-ch.receiveNewOrder:
 			if (numberOfConnectedElevators == 1) {
-				fmt.Printf("We are alone, we get the order!\n")
-				assignedNewOrder <- currentNewOrder
-			} else {	
-				newStates := <-receivedStates
-				elevStates[e.Id]= e
-				elevStates[newStates.Id] = newStates
+				ch.assignedNewOrder <- currentNewOrder
+			} else {
 				for elevatorId := range elevStates{
 					costs[elevatorId] = def.Cost{Cost: costFunction(elevStates[elevatorId], currentNewOrder), CurrentOrder: currentNewOrder, Id: elevatorId}
 				}
-				fmt.Printf("get through here\n")
 				orderSelection(assignedNewOrder, costs, e.Id)
 
 			}

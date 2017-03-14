@@ -12,7 +12,6 @@ func FsmFloorArrival(newFloor int, elevator *def.Elevator) {
 	if newFloor == -1 {
 		fmt.Print("Run FSMFloorArrival while not on floor\n")
 	} else {
-		//fmt.Print("FSMFloorArrival\n")
 		driver.SetFloorIndicator(newFloor)
 		elevator.LastFloor = newFloor
 		elevator.MotorStopTimer.Stop()
@@ -154,17 +153,6 @@ func FsmMotorStop(elevator *def.Elevator) def.Elevator {
 
 	elev := driver.ElevatorInitFromBackup()
 	return elev
-
-	/*dead := true
-	for dead{
-		driver.SetMotorDirection(def.DirDown)
-		if driver.GetFloorSensorSignal() != -1 {
-			fmt.Print(int(driver.GetFloorSensorSignal()))
-			driver.SetMotorDirection(def.DirStop)
-			dead = false
-		}
-
-	}*/
 }
 
 func pollFloors() <-chan int {
@@ -182,4 +170,24 @@ func pollFloors() <-chan int {
 		}
 	}()
 	return c
+}
+
+func SafeKill(errorHandling chan string) {
+	var c = make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	<-c
+	var err = os.Remove("log.txt")
+	fmt.Print("User terminated program.\n\n")
+	driver.SetMotorDirection(def.DirStop)
+
+	for i := 0; i < def.NFloors; i++ {
+		driver.ClearLightsAtFloor(i)
+	}
+	//def.Restart.Run()
+
+	if err != nil {
+		log.Fatalf("Error deleting file: %v", err)
+	}
+	log.Fatal("\nUser terminated program.\n")
+
 }
