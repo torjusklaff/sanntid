@@ -60,7 +60,7 @@ func main() {
 
 	elevator.Id = net.GetId()
 
-	go net.NetworkInit(elevator.Id, n_elevators, receive_new_order, receive_remove_order, send_new_order, send_remove_order, send_global_queue, received_global_queue, send_states, received_states/*, elevatorDisconnected chan bool*/)
+	go net.NetworkInit(/*&elevator, */elevator.Id, n_elevators, receive_new_order, receive_remove_order, send_new_order, send_remove_order, send_global_queue, received_global_queue, send_states, received_states/*, elevatorDisconnected chan bool*/)
 	go arb.ArbitratorInit(elevator, receive_new_order, assigned_new_order,received_states, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
 	go driver.CheckAllButtons(send_new_order, assigned_new_order)

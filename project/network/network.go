@@ -23,6 +23,8 @@ const (
 
 // Setter opp alle channels og funksjoner i en felles initialisering
 func NetworkInit(
+	/* elevator *def.Elevator
+	*/
 	id string,
 	n_elevators chan int,
 	receive_new_order chan def.Order,
@@ -32,11 +34,11 @@ func NetworkInit(
 	send_global_queue chan [4][2]int,
 	received_global_queue chan [4][2]int,
 	send_states chan def.Elevator,
-	received_states chan def.Elevator
-	/*elevatorDisconnected chan bool*/) {
+	received_states chan def.Elevator) {
 
 
 	// FORSLAG: Denne koden vil forhåpentligvis gjøre sånn at id-en til heisen alltid er oppdatert (altså endres om heisen disconnecter fra nett)
+	// Dersom den mister nett får den staten "NotConnected", og dersom den får tilbake nettet går den til Idle
 	/* var id string
 	go func(){
 		for{
@@ -46,6 +48,10 @@ func NetworkInit(
 			if err != nil {
 				fmt.Println(err)
 				localIP = "DISCONNECTED"
+				elevator.ElevatorState = def.NotConnected
+			}
+			if (err == nil) && (elevator.ElevatorState == def.NotConnected){
+				elevator.ElevatorState == def.Idle
 			}
 			id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 		}
@@ -53,14 +59,6 @@ func NetworkInit(
 
 	elevator.Id = id
 	*/
-
-	//Så kan man feks sende ut en beskjed på en channel at heisen er frakoblet, slik:
-	/*
-	if strings.Contains(id, "DISCONNECTED"){
-		elevatorDisconnected <- true
-	}
-	*/
-	//PS: Dette funker bare om man kun sender til channelen dersom den er frakoblet
 
 	go PeerListener(id, n_elevators)
 	go SendMsg(id, send_new_order, send_remove_order, send_global_queue, send_states)
