@@ -15,7 +15,6 @@ func ArbitratorInit(
 	receive_new_order chan def.Order,
 	assigned_new_order chan def.Order,
 	received_states chan def.Elevator,
-	send_states chan def.Elevator,
 	number_of_connected_elevators chan int) {
 	
 	n_elevators := 1
@@ -28,36 +27,23 @@ func ArbitratorInit(
 			n_elevators = elevators
 			fmt.Printf("Number of elevators: %v \n", n_elevators)
 		case current_new_order := <-receive_new_order:
-			//fmt.Printf("We receive a new order\n")
-			//send_states <- e
-			if (current_new_order.Type == def.Buttoncall_internal) || (n_elevators == 1) {
+			if (n_elevators == 1) {
 				fmt.Printf("We are alone, we get the order!\n")
 				assigned_new_order <- current_new_order
-			} else {
-				
+			} else {	
+				new_states := <-received_states
+				elev_states[e.Id]= e
+				elev_states[new_states.Id] = new_states
 				for elevator_id := range elev_states{
 					costs[elevator_id] = def.Cost{Cost: costFunction(elev_states[elevator_id], current_new_order), Current_order: current_new_order, Id: elevator_id}
 				}
+				fmt.Printf("get through here\n")
 				orderSelection(assigned_new_order, costs, n_elevators, e.Id)
 
 			}
 		case new_states := <-received_states:
-			id_in_list := false
-			num_in_elev_states := 0
-			for known_ids, _ := range elev_states{
-				fmt.Printf("ID: %s \n",known_ids)
-				if new_states.Id == known_ids{
-					fmt.Printf("Update states for ID %v\n",known_ids)
-					id_in_list = true
-					elev_states[known_ids]=new_states
-				}
-				num_in_elev_states +=1
-			}
-			if !id_in_list{
-				//fmt.Printf("Add new index and states\n")
-				elev_states[new_states.Id] = new_states
-			}
-			fmt.Printf("Length of known elevators with states: %v \n", num_in_elev_states)
+			elev_states[e.Id]= e
+			elev_states[new_states.Id] = new_states
 			
 		}
 	}
@@ -137,7 +123,7 @@ func costFunction(e def.Elevator, order def.Order) float64 {
 }
 
 
-func findLowestCost(costs map[string]def.Cost) def.Cost {
+func findLowestCost(costs map[string]def.Cost) def.Cost { //Problemet er inni her!!!!!!!!!!
 	dummy_order := def.Order{Type: 0, Floor: 0, Internal: false, Id: " "}
 	lowest_cost:= def.Cost{Cost: math.Inf(+1), Current_order: dummy_order, Id: " "}
 	for Id, cost := range costs {
@@ -149,6 +135,6 @@ func findLowestCost(costs map[string]def.Cost) def.Cost {
 				lowest_cost = cost
 			}
 		}
-	}
+	}//Skjer i for løkka at det blir index out of range. FOr sliten til å fikse nå, se gjerne på det selv hvis du får to heiser
 	return lowest_cost
 }

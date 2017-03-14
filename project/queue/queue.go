@@ -106,10 +106,13 @@ func Enqueue(e *def.Elevator, order def.Order) {
 }
 
 func UpdateGlobalQueue(global_queue_chan chan [4][2]int, old_queue [4][2]int, new_order def.Order) {
+	fmt.Printf("I get started now, global_queue\n")
 	if new_order.Type == def.Buttoncall_internal {
 		global_queue_chan <- old_queue
 	} else {
 		old_queue[new_order.Floor][int(new_order.Type)] = 1
 		global_queue_chan <- old_queue
 	}
+	fmt.Printf("Not me, update global queue, fucking up\n")
 }
+
