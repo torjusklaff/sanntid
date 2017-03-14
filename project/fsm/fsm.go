@@ -8,9 +8,8 @@ import (
 	"time"
 )
 
-func FsmFloorArrival(newFloor int, elevator *def.Elevator) {
+func FsmFloorArrival(newFloor int, elevator *def.Elevator, allExternalOrders [4][2]int, sendGlobalQueue chan [4][2]int) {
 	if newFloor == -1 {
-		fmt.Print("Run FSMFloorArrival while not on floor\n")
 	} else {
 		driver.SetFloorIndicator(newFloor)
 		elevator.LastFloor = newFloor
@@ -20,11 +19,20 @@ func FsmFloorArrival(newFloor int, elevator *def.Elevator) {
 			if queue.ShouldStop(*elevator) {
 				driver.SetMotorDirection(def.DirStop)
 				queue.DeleteInternalQueuesAtFloor(elevator, newFloor)
+				queue.DeleteGlobalQueuesAtFloor(allExternalOrders, sendGlobalQueue, newFloor)
 				driver.ClearLightsAtFloor(elevator.LastFloor)
 				driver.SetDoorOpenLamp(1)
 				elevator.DoorTimer.Reset(3 * time.Second)
-				fmt.Printf("Timer started\n")
 				elevator.ElevatorState = def.StopOnFloor
+			}
+			break
+		case def.NotConnected:
+			if queue.ShouldStop(*elevator) {
+				driver.SetMotorDirection(def.DirStop)
+				queue.DeleteInternalQueuesAtFloor(elevator, newFloor)
+				driver.ClearLightsAtFloor(elevator.LastFloor)
+				driver.SetDoorOpenLamp(1)
+				elevator.DoorTimer.Reset(3 * time.Second)
 			}
 			break
 		case def.Idle:
@@ -35,7 +43,6 @@ func FsmFloorArrival(newFloor int, elevator *def.Elevator) {
 }
 
 func FsmNextOrder(elevator *def.Elevator, nextOrder def.Order) { //arbitrator decides where we should go next
-	fmt.Print("FSMNextOrder\n")
 	driver.SetButtonLamp(nextOrder, 1)
 
 	switch elevator.ElevatorState {
@@ -62,7 +69,6 @@ func FsmNextOrder(elevator *def.Elevator, nextOrder def.Order) { //arbitrator de
 		} else {
 			elevator.ElevatorState = def.Moving
 			elevator.MotorStopTimer.Reset(4 * time.Second)
-			fmt.Print("FSMNextOrder: Reset motorTimer\n")
 		}
 	case def.Moving:
 		break
@@ -74,7 +80,24 @@ func FsmNextOrder(elevator *def.Elevator, nextOrder def.Order) { //arbitrator de
 		if nextOrder.Type == def.ButtoncallInternal {
 			queue.Enqueue(elevator, nextOrder)
 		}
-
+	case def.NotConnected:
+		queue.Enqueue(elevator, nextOrder)
+		if nextOrder.Floor == elevator.LastFloor {
+			queue.DeleteInternalQueuesAtFloor(elevator, elevator.LastFloor)
+			driver.ClearLightsAtFloor(elevator.LastFloor)
+			elevator.DoorTimer.Reset(3 * time.Second)
+			driver.SetDoorOpenLamp(1)
+		} else {
+			if nextOrder.Floor > elevator.LastFloor {
+				elevator.CurrentDirection = def.DirUp
+				driver.SetMotorDirection(elevator.CurrentDirection)
+				elevator.MotorStopTimer.Reset(4 * time.Second)
+			} else {
+				elevator.CurrentDirection = def.DirDown
+				driver.SetMotorDirection(elevator.CurrentDirection)
+				elevator.MotorStopTimer.Reset(4 * time.Second)
+			}
+		}
 	default:
 		break
 	}
@@ -82,7 +105,6 @@ func FsmNextOrder(elevator *def.Elevator, nextOrder def.Order) { //arbitrator de
 }
 
 func FsmOnDoorTimeout(elevator *def.Elevator) {
-	fmt.Print("FSMOnDoorTimeout\n")
 	queue.PrintQueue(*elevator)
 	driver.SetDoorOpenLamp(0)
 	switch elevator.ElevatorState {
@@ -95,50 +117,17 @@ func FsmOnDoorTimeout(elevator *def.Elevator) {
 		} else {
 			elevator.ElevatorState = def.Moving
 			elevator.MotorStopTimer.Reset(8 * time.Second)
-			fmt.Print("FSMWhereToNext: Reset motorTimer\n")
 		}
 		break
 	case def.Idle:
+		elevator.ElevatorState = def.StopOnFloor
+		FsmOnDoorTimeout(elevator)
+	case def.NotConnected:
 		elevator.CurrentDirection = queue.ChooseDirection(*elevator)
 		driver.SetMotorDirection(elevator.CurrentDirection)
 
-		if elevator.CurrentDirection == def.DirStop {
-			elevator.ElevatorState = def.Idle
-		} else {
-			elevator.ElevatorState = def.Moving
+		if !(elevator.CurrentDirection == def.DirStop) {
 			elevator.MotorStopTimer.Reset(8 * time.Second)
-			fmt.Print("FSMOnDoorTimeout: Reset motorTimer\n")
-		}
-		break
-	default:
-		break
-	}
-}
-
-func FsmWhereToNext(elevator def.Elevator) {
-	switch elevator.ElevatorState {
-	case def.StopOnFloor:
-		elevator.CurrentDirection = queue.ChooseDirection(elevator)
-		driver.SetMotorDirection(elevator.CurrentDirection)
-
-		if elevator.CurrentDirection == def.DirStop {
-			elevator.ElevatorState = def.Idle
-		} else {
-			elevator.ElevatorState = def.Moving
-			elevator.MotorStopTimer.Reset(8 * time.Second)
-			fmt.Print("FSMWhereToNext: Reset motorTimer\n")
-		}
-		break
-	case def.Idle:
-		elevator.CurrentDirection = queue.ChooseDirection(elevator)
-		driver.SetMotorDirection(elevator.CurrentDirection)
-
-		if elevator.CurrentDirection == def.DirStop {
-			elevator.ElevatorState = def.Idle
-		} else {
-			elevator.ElevatorState = def.Moving
-			elevator.MotorStopTimer.Reset(8 * time.Second)
-			fmt.Print("FSMOnDoorTimeout: Reset motorTimer\n")
 		}
 		break
 	default:
@@ -147,11 +136,10 @@ func FsmWhereToNext(elevator def.Elevator) {
 }
 
 func FsmMotorStop(elevator *def.Elevator) def.Elevator {
-	fmt.Print("FSMMotorStop\n")
 	elevator.CurrentDirection = def.DirStop
 	driver.SetMotorDirection(def.DirStop)
 
-	elev := driver.ElevatorInitFromBackup()
+	elev := driver.ElevatorInit()
 	return elev
 }
 
@@ -177,13 +165,11 @@ func SafeKill(errorHandling chan string) {
 	signal.Notify(c, os.Interrupt)
 	<-c
 	var err = os.Remove("log.txt")
-	fmt.Print("User terminated program.\n\n")
 	driver.SetMotorDirection(def.DirStop)
 
 	for i := 0; i < def.NFloors; i++ {
 		driver.ClearLightsAtFloor(i)
 	}
-	//def.Restart.Run()
 
 	if err != nil {
 		log.Fatalf("Error deleting file: %v", err)

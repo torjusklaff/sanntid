@@ -18,10 +18,9 @@ func EventHandler(elevator *def.Elevator, ch def.Channels){
 	for {
 		select {
 		case floor := <-onFloor:
-			FsmFloorArrival(floor, elevator)
+			FsmFloorArrival(floor, elevator, allExternalOrders, ch.sendGlobalQueue)
 
 		case <-elevator.DoorTimer.C:
-			fmt.Printf("Timer stopped\n")
 			FsmOnDoorTimeout(elevator)
 
 		case newOrder := <-ch.receiveNewOrder:
@@ -29,7 +28,6 @@ func EventHandler(elevator *def.Elevator, ch def.Channels){
 
 		case newOrder := <-ch.assignedNewOrder:
 			if elevator.Queue[newOrder.Floor][int(newOrder.Type)] == 0 {
-				fmt.Print("Assigned new order\n")
 				queue.Enqueue(elevator, newOrder)
 				FsmNextOrder(elevator, newOrder)
 			}
@@ -37,7 +35,6 @@ func EventHandler(elevator *def.Elevator, ch def.Channels){
 			allExternalOrders = globalQueue
 
 		case <-elevator.MotorStopTimer.C:
-			fmt.Print("main: detected motorStop\n")
 			errorMessage := "MOTORSTOP"
 			ch.errorHandling <- errorMessage
 			elevator.ElevatorState = def.MotorStop
@@ -49,12 +46,18 @@ func EventHandler(elevator *def.Elevator, ch def.Channels){
 				var dummyOrder def.Order
 				dummyOrder.Floor = 1
 				dummyOrder.Type = def.ButtoncallInternal
-
 				FsmNextOrder(elevator, dummyOrder)
 			}
 			if err == "PROGRAMCRASH" {
 				def.Restart.Run()
 			}
+			if err == "DISCONNECTED"{
+				driver.StopButton(1)
+			}
+			if err == "CONNECTED"{
+				driver.StopButton(0)
+			}
+
 		case <- sendStatesTicker.C:
 			sendStates <- elevator
 		default:

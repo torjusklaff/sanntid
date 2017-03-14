@@ -48,9 +48,10 @@ type ElevStates int
 
 const (
 	Idle          ElevStates = iota
-	StopOnFloor             //Not really necessary, look into it (Change to OnFloor)
+	StopOnFloor
 	Moving
 	MotorStop
+	NotConnected
 )
 
 type Elevator struct {

@@ -30,7 +30,7 @@ func SetButtonLampFromGlobalQueue(queue [4][2]int) {
 	}
 }
 
-func ButtonChecker(externalButtonPressed chan def.Order, internalButtonPressed chan def.Order) {
+func ButtonChecker(ch def.Channels) {
 	var pressedButton def.Order
 	var buttonSignal def.Order
 	for {
@@ -43,9 +43,9 @@ func ButtonChecker(externalButtonPressed chan def.Order, internalButtonPressed c
 					pressedButton.Type = def.ButtonType(button)
 					pressedButton.Floor = floor
 					if pressedButton.Type == def.ButtoncallInternal {
-						internalButtonPressed <- pressedButton
+						ch.assignedNewOrder <- pressedButton
 					} else {
-						externalButtonPressed <- pressedButton
+						ch.sendNewOrder <- pressedButton
 					}
 					time.Sleep(50*time.Millisecond)
 				}

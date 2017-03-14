@@ -33,10 +33,8 @@ func main() {
 		sendStates: make(chan def.Elevator)
 		errorHandling: make(chan string)
 	}
-	
-	elevator.Id = net.GetId()
 
-	go net.NetworkInit(elevator.Id, channels)
+	go net.NetworkInit(&elevator, channels)
 	go arb.ArbitratorInit(elevator, channels)
 	go driver.CheckAllButtons(channels)
 

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"strings"
 )
 
 const (
@@ -21,27 +22,36 @@ const (
 )
 
 // Setter opp alle channels og funksjoner i en felles initialisering
-func NetworkInit(id string, ch def.Channels) {
+func NetworkInit(elevator *def.Elevator, ch def.Channels) {
+
+	var id string
+	go func(){
+		for{
+			flag.StringVar(&id, "id", "", "id of this peer")
+			flag.Parse()
+			localIP, err := localip.LocalIP()
+			if err != nil {
+				fmt.Println(err)
+				localIP = "DISCONNECTED"
+				elevator.ElevatorState = def.NotConnected
+				ch.errorHandling <- "DISCONNECTED"
+			}
+			if (err == nil) && (elevator.ElevatorState == def.NotConnected){
+				elevator.ElevatorState == def.Idle
+				ch.errorHandling <- "CONNECTED"
+			}
+			id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
+		}
+	}()
+
+	elevator.Id = id
 
 	go PeerListener(id, ch.numElevators)
 	go SendMsg(id, ch.sendNewOrder, ch.sendRemoveOrder, ch.sendGlobalQueue, ch.sendStates)
 	go ReceiveMsg(id, ch.receiveNewOrder, ch.receiveRemoverOrder, ch.receivedGlobalQueue, ch.receivedStates)
 }
 
-func GetId() string {
-	var id string
-	flag.StringVar(&id, "id", "", "id of this peer")
-	flag.Parse()
-	localIP, err := localip.LocalIP()
-	if err != nil {
-		fmt.Println(err)
-		localIP = "DISCONNECTED"
-	}
-	id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
-	return id
-}
 
-// Setter opp en peer-listener som sjekker etter updates på levende heiser
 func PeerListener(id string, numElevators chan int) {
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
