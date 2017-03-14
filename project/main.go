@@ -32,40 +32,29 @@ func main() {
 
 
 	// 	CHANNELS
-	numElevators := make(chan int)
-
-	receiveNewOrder := make(chan def.Order)
-	receiveRemoveOrder := make(chan def.Order)
-	receivedGlobalQueue := make(chan [4][2]int)
-	receivedStates := make(chan def.Elevator, 10)
-
-	sendNewOrder := make(chan def.Order)
-	sendRemoveOrder := make(chan def.Order)
-	assignedNewOrder := make(chan def.Order)
-	sendGlobalQueue := make(chan [4][2]int)
-	sendStates := make(chan def.Elevator)
-	onFloor := pollFloors()
-	errorHandling := make(chan string)
-
+	channels := def.Channels{
+		numElevators: make(chan int)
+		receiveNewOrder: make(chan def.Order)
+		receiveRemoveOrder: make(chan def.Order)
+		receivedGlobalQueue: make(chan [4][2]int)
+		receivedStates: make(chan def.Elevator, 10)
+		sendNewOrder: make(chan def.Order)
+		sendRemoveOrder: make(chan def.Order)
+		assignedNewOrder: make(chan def.Order)
+		sendGlobalQueue: make(chan [4][2]int)
+		sendStates: make(chan def.Elevator)
+		errorHandling: make(chan string)
+	}
+	
+	onFloor := fsm.pollFloors()
 	elevator.Id = net.GetId()
 
-	go net.NetworkInit(elevator.Id, numElevators, receiveNewOrder, receiveRemoveOrder, sendNewOrder, sendRemoveOrder, sendGlobalQueue, receivedGlobalQueue, sendStates, receivedStates)
-	go arb.ArbitratorInit(elevator, receiveNewOrder, assignedNewOrder,receivedStates, numElevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
-
-	go driver.CheckAllButtons(sendNewOrder, assignedNewOrder)
-	//go driver.ElevatorOnFloor(onFloor, elevator)
-
+	go net.NetworkInit(elevator.Id, channels)
+	go arb.ArbitratorInit(elevator, channels)
+	go driver.CheckAllButtons(channels)
 	go SafeKill()
 
-	testIt := 0
 	for {
-		testIt += 1
-		if testIt == 500000 {
-			backup.BackupInternalQueue(elevator)
-			//driver.SetButtonLampFromInternalQueue(elevator.Queue)
-			//driver.SetButtonLampFromGlobalQueue(allExternalOrders)
-			testIt = 0
-		}
 		select {
 		case floor := <-onFloor:
 			fsm.FsmFloorArrival(floor, &elevator)
@@ -133,19 +122,4 @@ func SafeKill() {
 	log.Fatal("\nUser terminated program.\n")
 
 }
-func pollFloors() <-chan int {
-	c := make(chan int)
-	go func() {
-		oldFloor := driver.GetFloorSensorSignal()
 
-		for {
-			newFloor := driver.GetFloorSensorSignal()
-			if newFloor != oldFloor && newFloor != -1 {
-				c <- newFloor
-			}
-			oldFloor = newFloor
-			time.Sleep(time.Millisecond)
-		}
-	}()
-	return c
-}

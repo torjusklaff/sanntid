@@ -12,30 +12,20 @@ import (
 )
 
 const (
-	peerPort            = 20100
+	peerPort           = 20100
 	sendOrderPort      = 20012
 	removeOrderPort    = 16572
-	statesPort          = 16573
+	statesPort         = 16573
 	globalQueuePort    = 16574
-	broadcastTime       = 1 * time.Second
+	broadcastTime      = 1 * time.Second
 )
 
 // Setter opp alle channels og funksjoner i en felles initialisering
-func NetworkInit(
-	id string,
-	numElevators chan int,
-	receiveNewOrder chan def.Order,
-	receiveRemoverOrder chan def.Order,
-	sendNewOrder chan def.Order,
-	sendRemoveOrder chan def.Order,
-	sendGlobalQueue chan [4][2]int,
-	receivedGlobalQueue chan [4][2]int,
-	sendStates chan def.Elevator,
-	receivedStates chan def.Elevator) {
+func NetworkInit(id string, ch def.Channels) {
 
-	go PeerListener(id, numElevators)
-	go SendMsg(id, sendNewOrder, sendRemoveOrder, sendGlobalQueue, sendStates)
-	go ReceiveMsg(id, receiveNewOrder, receiveRemoverOrder, receivedGlobalQueue, receivedStates)
+	go PeerListener(id, ch.numElevators)
+	go SendMsg(id, ch.sendNewOrder, ch.sendRemoveOrder, ch.sendGlobalQueue, ch.sendStates)
+	go ReceiveMsg(id, ch.receiveNewOrder, ch.receiveRemoverOrder, ch.receivedGlobalQueue, ch.receivedStates)
 }
 
 func GetId() string {
@@ -70,14 +60,14 @@ func PeerListener(id string, numElevators chan int) {
 	}
 }
 
-// Setter opp channels for broadcast og sender det som kommer inn på input-channelsene
-// se main fra network-module gitt på github
 func SendMsg(
 	localIP string,
 	sendNewOrder chan def.Order,
 	sendRemoveOrder chan def.Order,
 	sendGlobalQueue chan [4][2]int,
 	sendStates chan def.Elevator) {
+
+
 	bcastSendNewOrder := make(chan def.Order)
 	bcastSendRemoveOrder := make(chan def.Order)
 	bcastSendGlobalQueue := make(chan [4][2]int)
@@ -107,13 +97,13 @@ func SendMsg(
 	}
 }
 
-// Setter opp channels som lytter etter msg fra SendMsg()		(se main fra network-modul)
 func ReceiveMsg(
 	LocalIP string,
 	receiveNewOrder chan def.Order,
 	receiveRemoverOrder chan def.Order,
 	receivedGlobalQueue chan [4][2]int,
 	receivedStates chan def.Elevator) {
+
 
 	bcastReceiveNewOrder := make(chan def.Order)
 	bcastReceiveRemoveOrder := make(chan def.Order)

@@ -10,24 +10,19 @@ import (
 var maxDistance int = def.NFloors * def.NButtons
 
 // initialiserer arbitratoren sånn at den kan gi ut orders hele tiden
-func ArbitratorInit(
-	e def.Elevator,
-	receiveNewOrder chan def.Order,
-	assignedNewOrder chan def.Order,
-	receivedStates chan def.Elevator,
-	numberOfConnectedElevators chan int) {
+func ArbitratorInit(e def.Elevator, ch def.Channels) {
 	
-	numElevators := 1
+	numberOfConnectedElevators := 1
 	elevStates := map[string]def.Elevator{}
 	costs := make(map[string]def.Cost)
 	elevStates[e.Id] = e
 	for {
 		select {
-		case elevators := <-numberOfConnectedElevators:
-			numElevators = elevators
-			fmt.Printf("Number of elevators: %v \n", numElevators)
+		case elevators := <-ch.numElevators:
+			numberOfConnectedElevators = elevators
+			fmt.Printf("Number of elevators: %v \n", numberOfConnectedElevators)
 		case currentNewOrder := <-receiveNewOrder:
-			if (numElevators == 1) {
+			if (numberOfConnectedElevators == 1) {
 				fmt.Printf("We are alone, we get the order!\n")
 				assignedNewOrder <- currentNewOrder
 			} else {	
@@ -38,7 +33,7 @@ func ArbitratorInit(
 					costs[elevatorId] = def.Cost{Cost: costFunction(elevStates[elevatorId], currentNewOrder), CurrentOrder: currentNewOrder, Id: elevatorId}
 				}
 				fmt.Printf("get through here\n")
-				orderSelection(assignedNewOrder, costs, numElevators, e.Id)
+				orderSelection(assignedNewOrder, costs, e.Id)
 
 			}
 		case newStates := <-receivedStates:
@@ -53,8 +48,9 @@ func ArbitratorInit(
 func orderSelection(
 	assignedNewOrder chan<- def.Order,
 	costList map[string]def.Cost,
-	numElevators int,
 	localIP string) {
+
+
 	lowestCost := findLowestCost(costList)
 	fmt.Printf("Lowest cost calculated\n")
 	// sender

@@ -166,3 +166,20 @@ func FsmMotorStop(elevator *def.Elevator) def.Elevator {
 
 	}*/
 }
+
+func pollFloors() <-chan int {
+	c := make(chan int)
+	go func() {
+		oldFloor := driver.GetFloorSensorSignal()
+
+		for {
+			newFloor := driver.GetFloorSensorSignal()
+			if newFloor != oldFloor && newFloor != -1 {
+				c <- newFloor
+			}
+			oldFloor = newFloor
+			time.Sleep(time.Millisecond)
+		}
+	}()
+	return c
+}

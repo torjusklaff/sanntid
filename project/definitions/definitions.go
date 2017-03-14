@@ -77,4 +77,18 @@ type Cost struct {
 	Id            string
 }
 
+type Channels struct {
+	numElevators chan int
+	receiveNewOrder chan def.Order
+	receiveRemoveOrder chan def.Order
+	receivedGlobalQueue chan [4][2]int
+	receivedStates chan def.Elevator
+	sendNewOrder chan def.Order
+	sendRemoveOrder chan def.Order
+	assignedNewOrder chan def.Order
+	sendGlobalQueue chan [4][2]int
+	sendStates chan def.Elevator
+	errorHandling chan string
+}
+
 var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main.go")
