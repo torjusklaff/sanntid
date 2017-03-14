@@ -4,7 +4,6 @@ import (
 	def "../definitions"
 	"../driver"
 	"../queue"
-	"fmt"
 	"time"
 )
 

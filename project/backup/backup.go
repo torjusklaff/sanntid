@@ -48,8 +48,8 @@ func BackupInternalQueue(elevator def.Elevator) {
 func QueueToString(e def.Elevator) string {
 	var queueString string
 	var orderString string
-	for f := 0; f < def.NFloors; f++ {
-		for btn := 0; btn < def.NButtons; btn++ {
+	for f := 0; f < def.NumFloors; f++ {
+		for btn := 0; btn < def.NumButtons; btn++ {
 			if e.Queue[f][btn] == 1 {
 				orderString = "1 "
 			} else {

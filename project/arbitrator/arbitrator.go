@@ -2,12 +2,11 @@ package arbitrator
 
 import (
 	def "../definitions"
-	"fmt"
 	"math"
 	"strings"
 )
 
-var maxDistance int = def.NFloors * def.NButtons
+var maxDistance int = def.NumFloors * def.NumButtons
 
 
 func ArbitratorInit(e def.Elevator, ch def.Channels) {
@@ -45,16 +44,9 @@ func orderSelection(
 	costList map[string]def.Cost,
 	localIP string) {
 
-
 	lowestCost := findLowestCost(costList)
-	fmt.Printf("Lowest cost calculated\n")
-
 	if lowestCost.Id == localIP {
-		fmt.Printf("We took the order!\n")
 		AssignedNewOrder <- lowestCost.CurrentOrder
-		
-	} else {
-		fmt.Printf("Someone else took the order\n")
 	}
 }
 
@@ -88,7 +80,7 @@ func movementPenalty(state def.ElevStates, direction def.MotorDirection, differe
 }
 
 func turnPenalty(state def.ElevStates, elevatorFloor int, elevatorDirection def.MotorDirection, orderFloor int) float64 {
-	if ((state == def.Idle) && ((elevatorFloor == 1) || (elevatorFloor == def.NFloors))) || (state == def.Moving) {
+	if ((state == def.Idle) && ((elevatorFloor == 1) || (elevatorFloor == def.NumFloors))) || (state == def.Moving) {
 		return 0
 	} else if (elevatorDirection == def.DirUp && orderFloor < elevatorFloor) || (elevatorDirection == def.DirDown && orderFloor > elevatorFloor) {
 		return 0.75
@@ -98,10 +90,10 @@ func turnPenalty(state def.ElevStates, elevatorFloor int, elevatorDirection def.
 }
 
 func orderDirectionPenalty(elevatorDirection def.MotorDirection, orderFloor int, orderDirection def.ButtonType) float64 {
-	if orderFloor == 1 || orderFloor == def.NFloors {
+	if orderFloor == 1 || orderFloor == def.NumFloors {
 		return 0
 	} else if int(elevatorDirection) != int(orderDirection) {
-		return def.NFloors - 2 + 0.25
+		return def.NumFloors - 2 + 0.25
 	} else {
 		return 0
 	}

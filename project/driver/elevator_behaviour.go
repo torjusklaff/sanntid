@@ -1,12 +1,14 @@
 package driver
 
-import def "../definitions"
-import "time"
-import "../backup"
+import (
+	def "../definitions"
+	"../backup"
+	"time"
+)
 
 func SetButtonLampFromInternalQueue(queue [4][3]int) {
-	for f := 0; f < def.NFloors; f++ {
-		for btn := 0; btn < def.NButtons; btn++ {
+	for f := 0; f < def.NumFloors; f++ {
+		for btn := 0; btn < def.NumButtons; btn++ {
 
 			var button def.Order
 			button.Floor = f
@@ -18,7 +20,7 @@ func SetButtonLampFromInternalQueue(queue [4][3]int) {
 }
 
 func SetButtonLampFromGlobalQueue(queue [4][2]int) {
-	for f := 0; f < def.NFloors; f++ {
+	for f := 0; f < def.NumFloors; f++ {
 		for btn := 0; btn < 2; btn++ {
 
 			var button def.Order
@@ -40,7 +42,7 @@ func ElevatorOnFloor(onFloor chan int, elevator def.Elevator) {
 }
 
 func ClearLightsAtFloor(floor int) {
-	for btn := 0; btn < def.NButtons; btn++ {
+	for btn := 0; btn < def.NumButtons; btn++ {
 		var button def.Order
 		button.Type = def.ButtonType(btn)
 		button.Floor = floor
@@ -55,7 +57,7 @@ func ElevatorInit() def.Elevator {
 
 	for FloorSensorSignal() == -1 {
 	}
-	
+
 	SetMotorDirection(def.DirStop)
 	SetFloorIndicator(FloorSensorSignal())
 

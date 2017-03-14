@@ -6,9 +6,8 @@ import (
 )
 
 const (
-	NFloors    = 4
-	NButtons   = 3
-	NumElevators = 3
+	NumFloors    = 4
+	NumButtons   = 3
 )
 
 type MotorDirection int
@@ -57,7 +56,7 @@ const (
 type Elevator struct {
 	LastFloor        int
 	CurrentDirection MotorDirection
-	Queue             [NFloors][NButtons]int
+	Queue             [NumFloors][NumButtons]int
 	ElevatorState    ElevStates
 	Id                string
 	DoorTimer        *time.Timer

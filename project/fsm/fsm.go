@@ -4,7 +4,6 @@ import (
 	def "../definitions"
 	"../driver"
 	"../queue"
-	"fmt"
 	"time"
 )
 
@@ -147,8 +146,8 @@ func ButtonChecker(ch def.Channels) {
 	var pressedButton def.Order
 	var buttonSignal def.Order
 	for {
-		for floor := 0; floor < def.NFloors; floor++ {
-			for button := 0; button < def.NButtons; button++ {
+		for floor := 0; floor < def.NumFloors; floor++ {
+			for button := 0; button < def.NumButtons; button++ {
 				buttonSignal.Floor = floor
 				buttonSignal.Type = def.ButtonType(button)
 
@@ -191,7 +190,7 @@ func SafeKill(ErrorHandling chan string) {
 	var err = os.Remove("log.txt")
 	driver.SetMotorDirection(def.DirStop)
 
-	for i := 0; i < def.NFloors; i++ {
+	for i := 0; i < def.NumFloors; i++ {
 		driver.ClearLightsAtFloor(i)
 	}
 

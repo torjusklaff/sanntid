@@ -1,13 +1,13 @@
 package queue
 
 import (
-	"../backup"
 	def "../definitions"
+	"../backup"
 )
 
 func requestsAbove(e def.Elevator) bool {
-	for f := e.LastFloor + 1; f < def.NFloors; f++ {
-		for btn := 0; btn < def.NButtons; btn++ {
+	for f := e.LastFloor + 1; f < def.NumFloors; f++ {
+		for btn := 0; btn < def.NumButtons; btn++ {
 			if e.Queue[f][def.ButtonType(btn)] == 1 {
 				return true
 			}
@@ -18,7 +18,7 @@ func requestsAbove(e def.Elevator) bool {
 
 func requestsBelow(e def.Elevator) bool {
 	for f := 0; f < e.LastFloor; f++ {
-		for btn := 0; btn < def.NButtons; btn++ {
+		for btn := 0; btn < def.NumButtons; btn++ {
 			if e.Queue[f][btn] == 1 {
 				return true
 			}
@@ -60,7 +60,7 @@ func ChooseDirection(e def.Elevator) def.MotorDirection {
 }
 
 func DeleteInternalQueuesAtFloor(e *def.Elevator, floor int) {
-	for btn := 0; btn < def.NButtons; btn++ {
+	for btn := 0; btn < def.NumButtons; btn++ {
 		if e.Queue[floor][btn] == 1 {
 			e.Queue[floor][btn] = 0
 			backup.BackupInternalQueue(*e)

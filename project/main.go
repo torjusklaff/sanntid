@@ -1,7 +1,5 @@
 package main
 
-//Plass 15 ip: 148 plass 12 ip: 144 plass 2 ip: 149 plass 3 ip: 150
-// Test-main for driver-files
 import (
 	arb "./arbitrator"
 	def "./definitions"
