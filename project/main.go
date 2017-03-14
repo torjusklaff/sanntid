@@ -4,17 +4,8 @@ package main
 // Test-main for driver-files
 import (
 	arb "./arbitrator"
-	"./backup"
 	def "./definitions"
-	"./driver"
-	"./fsm"
 	net "./network"
-	"./queue"
-	"fmt"
-	"log"
-	"os"
-	"os/signal"
-	"time"
 )
 
 func main() {
@@ -36,7 +27,7 @@ func main() {
 
 	go net.NetworkInit(&elevator, channels)
 	go arb.ArbitratorInit(elevator, channels)
-	go driver.ButtonChecker(channels)
+	go fsm.ButtonChecker(channels)
 	go fsm.EventHandler(&elevator, channels)
 
 }

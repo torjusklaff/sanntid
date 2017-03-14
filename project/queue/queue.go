@@ -68,13 +68,13 @@ func DeleteInternalQueuesAtFloor(e *def.Elevator, floor int) {
 	}
 }
 
-func DeleteGlobalQueuesAtFloor(sendGlobalQueue chan [4][2]int, oldQueue [4][2]int, floor int) {
+func DeleteGlobalQueuesAtFloor(SendGlobalQueue chan [4][2]int, oldQueue [4][2]int, floor int) {
 	for btn := 0; btn < 2; btn++ {
 		if oldQueue[floor][btn] == 1 {
 			oldQueue[floor][btn] = 0
 		}
 	}
-	sendGlobalQueue <- oldQueue
+	SendGlobalQueue <- oldQueue
 }
 
 

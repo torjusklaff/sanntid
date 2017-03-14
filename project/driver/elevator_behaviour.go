@@ -30,30 +30,6 @@ func SetButtonLampFromGlobalQueue(queue [4][2]int) {
 	}
 }
 
-func ButtonChecker(ch def.Channels) {
-	var pressedButton def.Order
-	var buttonSignal def.Order
-	for {
-		for floor := 0; floor < def.NFloors; floor++ {
-			for button := 0; button < def.NButtons; button++ {
-				buttonSignal.Floor = floor
-				buttonSignal.Type = def.ButtonType(button)
-
-				if ButtonSignal(buttonSignal) == 1 {
-					pressedButton.Type = def.ButtonType(button)
-					pressedButton.Floor = floor
-					if pressedButton.Type == def.ButtoncallInternal {
-						ch.AssignedNewOrder <- pressedButton
-					} else {
-						ch.SendNewOrder <- pressedButton
-					}
-					time.Sleep(50*time.Millisecond)
-				}
-			}
-		}
-	}
-}
-
 func ElevatorOnFloor(onFloor chan int, elevator def.Elevator) {
 	for {
 		if (FloorSensorSignal() != elevator.LastFloor) && (FloorSensorSignal() != -1) {

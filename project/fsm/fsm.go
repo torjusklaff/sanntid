@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func FsmFloorArrival(newFloor int, elevator *def.Elevator, allExternalOrders [4][2]int, sendGlobalQueue chan [4][2]int) {
+func FsmFloorArrival(newFloor int, elevator *def.Elevator, allExternalOrders [4][2]int, SendGlobalQueue chan [4][2]int) {
 	if newFloor == -1 {
 	} else {
 		driver.SetFloorIndicator(newFloor)
@@ -19,7 +19,7 @@ func FsmFloorArrival(newFloor int, elevator *def.Elevator, allExternalOrders [4]
 			if queue.ShouldStop(*elevator) {
 				driver.SetMotorDirection(def.DirStop)
 				queue.DeleteInternalQueuesAtFloor(elevator, newFloor)
-				queue.DeleteGlobalQueuesAtFloor(allExternalOrders, sendGlobalQueue, newFloor)
+				queue.DeleteGlobalQueuesAtFloor(allExternalOrders, SendGlobalQueue, newFloor)
 				driver.ClearLightsAtFloor(elevator.LastFloor)
 				driver.SetDoorOpenLamp(1)
 				elevator.DoorTimer.Reset(3 * time.Second)
@@ -143,6 +143,30 @@ func FsmMotorStop(elevator *def.Elevator) def.Elevator {
 	return elev
 }
 
+func ButtonChecker(ch def.Channels) {
+	var pressedButton def.Order
+	var buttonSignal def.Order
+	for {
+		for floor := 0; floor < def.NFloors; floor++ {
+			for button := 0; button < def.NButtons; button++ {
+				buttonSignal.Floor = floor
+				buttonSignal.Type = def.ButtonType(button)
+
+				if ButtonSignal(buttonSignal) == 1 {
+					pressedButton.Type = def.ButtonType(button)
+					pressedButton.Floor = floor
+					if pressedButton.Type == def.ButtoncallInternal {
+						ch.AssignedNewOrder <- pressedButton
+					} else {
+						ch.SendNewOrder <- pressedButton
+					}
+					time.Sleep(50*time.Millisecond)
+				}
+			}
+		}
+	}
+}
+
 func pollFloors() <-chan int {
 	c := make(chan int)
 	go func() {
@@ -160,7 +184,7 @@ func pollFloors() <-chan int {
 	return c
 }
 
-func SafeKill(errorHandling chan string) {
+func SafeKill(ErrorHandling chan string) {
 	var c = make(chan os.Signal)
 	signal.Notify(c, os.Interrupt)
 	<-c

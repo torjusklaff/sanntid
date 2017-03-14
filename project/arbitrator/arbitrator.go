@@ -19,19 +19,19 @@ func ArbitratorInit(e def.Elevator, ch def.Channels) {
 
 	for {
 		select {
-		case elevators := <-ch.numElevators:
+		case elevators := <-ch.NumElevators:
 			numberOfConnectedElevators = elevators
-		case currentNewOrder := <-ch.receiveNewOrder:
+		case currentNewOrder := <-ch.ReceiveNewOrder:
 			if (numberOfConnectedElevators == 1) {
-				ch.assignedNewOrder <- currentNewOrder
+				ch.AssignedNewOrder <- currentNewOrder
 			} else {
 				for elevatorId := range elevStates{
 					costs[elevatorId] = def.Cost{Cost: costFunction(elevStates[elevatorId], currentNewOrder), CurrentOrder: currentNewOrder, Id: elevatorId}
 				}
-				orderSelection(assignedNewOrder, costs, e.Id)
+				orderSelection(AssignedNewOrder, costs, e.Id)
 
 			}
-		case newStates := <-receivedStates:
+		case newStates := <-ReceivedStates:
 			elevStates[e.Id]= e
 			elevStates[newStates.Id] = newStates
 			
@@ -39,9 +39,9 @@ func ArbitratorInit(e def.Elevator, ch def.Channels) {
 	}
 }
 
-// Bestemmer om current heis skal ta bestillingen eller ikke, sender da på assignedNewOrder
+// Bestemmer om current heis skal ta bestillingen eller ikke, sender da på AssignedNewOrder
 func orderSelection(
-	assignedNewOrder chan<- def.Order,
+	AssignedNewOrder chan<- def.Order,
 	costList map[string]def.Cost,
 	localIP string) {
 
@@ -51,7 +51,7 @@ func orderSelection(
 	// sender
 	if lowestCost.Id == localIP {
 		fmt.Printf("We took the order!\n")
-		assignedNewOrder <- lowestCost.CurrentOrder
+		AssignedNewOrder <- lowestCost.CurrentOrder
 		
 	} else {
 		fmt.Printf("Someone else took the order\n")
