@@ -136,6 +136,8 @@ func SafeKill() {
 		driver.ClearLightsAtFloor(i)
 	}
 
+	// 											def.Restart.Run() vil forhåpentligvis gjøre at heisen starter på nytt fra ny terminal
+
 	if err != nil {
 		log.Fatalf("Error deleting file: %v", err)
 	}
