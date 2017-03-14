@@ -1,6 +1,6 @@
 package main
 
-//Plass 15 ip: 148 plass 12 ip: 144 plass 2 ip: 149 plass 3 ip: 150
+//Plass 15 ip: 148 |plass 12 ip: 144 |plass 2 ip: 149 |plass 3 ip: 150| plass 13 ip: 152
 // Test-main for driver-files
 import (
 	arb "./arbitrator"
@@ -20,7 +20,7 @@ import (
 func main() {
 	all_external_orders := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 
-	send_states_ticker := time.NewTicker(100*time.Millisecond)
+	send_states_ticker := time.NewTicker(100 * time.Millisecond)
 
 	var elevator def.Elevator
 	if _, err := os.Stat("log.txt"); err == nil {
@@ -47,21 +47,21 @@ func main() {
 	receive_new_order := make(chan def.Order)
 	receive_remove_order := make(chan def.Order)
 	received_global_queue := make(chan [4][2]int)
-	received_states := make(chan def.Elevator, 10)
+	received_states := make(chan def.Elevator, 100)
 
 	send_new_order := make(chan def.Order)
 	send_remove_order := make(chan def.Order)
 	assigned_new_order := make(chan def.Order)
 	send_global_queue := make(chan [4][2]int)
-	send_states := make(chan def.Elevator)
+	send_states := make(chan def.Elevator, 100)
 	on_floor := pollFloors()
 	error_handling := make(chan string)
 	/*elevatorDisconnected := make(chan bool)*/
 
 	elevator.Id = net.GetId()
 
-	go net.NetworkInit(/*&elevator, */elevator.Id, n_elevators, receive_new_order, receive_remove_order, send_new_order, send_remove_order, send_global_queue, received_global_queue, send_states, received_states/*, elevatorDisconnected chan bool*/)
-	go arb.ArbitratorInit(elevator, receive_new_order, assigned_new_order,received_states, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
+	go net.NetworkInit( /*&elevator, */ elevator.Id, n_elevators, receive_new_order, receive_remove_order, send_new_order, send_remove_order, send_global_queue, received_global_queue, send_states, received_states /*, elevatorDisconnected chan bool*/)
+	go arb.ArbitratorInit(elevator, receive_new_order, assigned_new_order, received_states, n_elevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
 	go driver.CheckAllButtons(send_new_order, assigned_new_order)
 	//go driver.Elevator_on_floor(on_floor, elevator)
@@ -73,8 +73,8 @@ func main() {
 		test_it += 1
 		if test_it == 500000 {
 			backup.BackupInternalQueue(elevator)
-			//driver.SetButtonLampFromInternalQueue(elevator.Queue)
-			//driver.SetButtonLampFromGlobalQueue(all_external_orders)
+			driver.SetButtonLampFromInternalQueue(elevator.Queue)
+			driver.SetButtonLampFromGlobalQueue(all_external_orders)
 			test_it = 0
 		}
 		select {
@@ -83,7 +83,7 @@ func main() {
 
 		case <-elevator.Door_timer.C:
 			fmt.Printf("Timer stopped\n")
-			//queue.ClearGlobalQueue(send_global_queue, all_external_orders, elevator.Last_floor)
+			queue.ClearGlobalQueue(send_global_queue, all_external_orders, elevator.Last_floor)
 			fsm.FsmOnDoorTimeout(&elevator)
 
 		case new_order := <-receive_new_order:
@@ -123,10 +123,10 @@ func main() {
 			if err == "CONNECTED"{
 				driver.StopButton(0)
 			}*/
-		case <- send_states_ticker.C:
+		case <-send_states_ticker.C:
 			send_states <- elevator
 		/* case <- elevatorDisconnected:
-			... noe heisen må gjøre om den disconnecter fra nettet
+		... noe heisen må gjøre om den disconnecter fra nettet
 		*/
 		default:
 			break
@@ -148,9 +148,9 @@ func SafeKill() {
 
 	// 											FORSLAG: def.Restart.Run() vil forhåpentligvis gjøre at heisen starter på nytt fra ny terminal
 
-	if err != nil {
-		log.Fatalf("Error deleting file: %v", err)
-	}
+	//if err != nil {
+	//	log.Fatalf("Error deleting file: %v", err)
+	//}
 	log.Fatal("\nUser terminated program.\n")
 
 }
