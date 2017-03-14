@@ -22,7 +22,7 @@ func main() {
 
 	sendStatesTicker := time.NewTicker(100*time.Millisecond)
 
-	elevator := driver.ElevInit()
+	elevator := driver.ElevatorInit()
 	var dummyOrder def.Order
 	dummyOrder.Floor = 1
 	dummyOrder.Type = def.ButtoncallInternal
@@ -72,11 +72,11 @@ func main() {
 
 		case <-elevator.DoorTimer.C:
 			fmt.Printf("Timer stopped\n")
-			//queue.ClearGlobalQueue(sendGlobalQueue, allExternalOrders, elevator.LastFloor)
+			//queue.DeleteGlobalQueuesAtFloor(sendGlobalQueue, allExternalOrders, elevator.LastFloor)
 			fsm.FsmOnDoorTimeout(&elevator)
 
 		case newOrder := <-receiveNewOrder:
-			queue.UpdateGlobalQueue(sendGlobalQueue, allExternalOrders, newOrder)
+			queue.AddOrderToGlobalQueue(sendGlobalQueue, allExternalOrders, newOrder)
 
 		case newOrder := <-assignedNewOrder:
 			if elevator.Queue[newOrder.Floor][int(newOrder.Type)] == 0 {
@@ -125,6 +125,7 @@ func SafeKill() {
 	for i := 0; i < def.NFloors; i++ {
 		driver.ClearLightsAtFloor(i)
 	}
+	def.Restart.Run()
 
 	if err != nil {
 		log.Fatalf("Error deleting file: %v", err)

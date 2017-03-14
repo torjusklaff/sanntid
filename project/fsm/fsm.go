@@ -20,7 +20,7 @@ func FsmFloorArrival(newFloor int, elevator *def.Elevator) {
 		case def.Moving:
 			if queue.ShouldStop(*elevator) {
 				driver.SetMotorDirection(def.DirStop)
-				queue.ClearAtFloor(elevator, newFloor)
+				queue.DeleteInternalQueuesAtFloor(elevator, newFloor)
 				driver.ClearLightsAtFloor(elevator.LastFloor)
 				driver.SetDoorOpenLamp(1)
 				elevator.DoorTimer.Reset(3 * time.Second)
@@ -43,7 +43,7 @@ func FsmNextOrder(elevator *def.Elevator, nextOrder def.Order) { //arbitrator de
 	case def.Idle:
 		queue.Enqueue(elevator, nextOrder)
 		if nextOrder.Floor == elevator.LastFloor {
-			queue.ClearAtFloor(elevator, elevator.LastFloor)
+			queue.DeleteInternalQueuesAtFloor(elevator, elevator.LastFloor)
 			driver.ClearLightsAtFloor(elevator.LastFloor)
 			elevator.DoorTimer.Reset(3 * time.Second)
 			driver.SetDoorOpenLamp(1)
@@ -68,7 +68,7 @@ func FsmNextOrder(elevator *def.Elevator, nextOrder def.Order) { //arbitrator de
 	case def.Moving:
 		break
 	case def.StopOnFloor:
-		queue.ClearAtFloor(elevator, elevator.LastFloor)
+		queue.DeleteInternalQueuesAtFloor(elevator, elevator.LastFloor)
 		driver.ClearLightsAtFloor(elevator.LastFloor)
 		elevator.DoorTimer.Reset(3 * time.Second)
 	case def.MotorStop:
@@ -152,7 +152,7 @@ func FsmMotorStop(elevator *def.Elevator) def.Elevator {
 	elevator.CurrentDirection = def.DirStop
 	driver.SetMotorDirection(def.DirStop)
 
-	elev := driver.ElevInitFromBackup()
+	elev := driver.ElevatorInitFromBackup()
 	return elev
 
 	/*dead := true

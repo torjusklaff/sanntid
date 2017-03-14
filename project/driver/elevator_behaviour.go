@@ -72,9 +72,9 @@ func ClearLightsAtFloor(floor int) {
 	}
 }
 
-func ElevInit() def.Elevator {
+func ElevatorInit() def.Elevator {
 	SetMotorDirection(def.DirStop)
-	C.elevInit()
+	C.ElevatorInit()
 	//clearAllLamps()
 
 	SetMotorDirection(def.DirDown)

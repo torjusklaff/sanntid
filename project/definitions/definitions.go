@@ -77,4 +77,4 @@ type Cost struct {
 	Id            string
 }
 
-var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main")
+var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main.go")
