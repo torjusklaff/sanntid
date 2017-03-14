@@ -128,7 +128,7 @@ func SafeKill() {
 	var c = make(chan os.Signal)
 	signal.Notify(c, os.Interrupt)
 	<-c
-	var err = os.Remove("log.txt")
+	//var err = os.Remove("log.txt") 			FORSLAG: uten denne vil heisen alltid starte fra siste interne backup
 	fmt.Print("User terminated program.\n\n")
 	driver.SetMotorDirection(def.Dir_stop)
 
@@ -136,7 +136,7 @@ func SafeKill() {
 		driver.ClearLightsAtFloor(i)
 	}
 
-	// 											def.Restart.Run() vil forhåpentligvis gjøre at heisen starter på nytt fra ny terminal
+	// 											FORSLAG: def.Restart.Run() vil forhåpentligvis gjøre at heisen starter på nytt fra ny terminal
 
 	if err != nil {
 		log.Fatalf("Error deleting file: %v", err)
