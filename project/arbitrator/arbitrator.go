@@ -17,17 +17,17 @@ func ArbitratorInit(
 	receivedStates chan def.Elevator,
 	numberOfConnectedElevators chan int) {
 	
-	nElevators := 1
+	numElevators := 1
 	elevStates := map[string]def.Elevator{}
 	costs := make(map[string]def.Cost)
 	elevStates[e.Id] = e
 	for {
 		select {
 		case elevators := <-numberOfConnectedElevators:
-			nElevators = elevators
-			fmt.Printf("Number of elevators: %v \n", nElevators)
+			numElevators = elevators
+			fmt.Printf("Number of elevators: %v \n", numElevators)
 		case currentNewOrder := <-receiveNewOrder:
-			if (nElevators == 1) {
+			if (numElevators == 1) {
 				fmt.Printf("We are alone, we get the order!\n")
 				assignedNewOrder <- currentNewOrder
 			} else {	
@@ -38,7 +38,7 @@ func ArbitratorInit(
 					costs[elevatorId] = def.Cost{Cost: costFunction(elevStates[elevatorId], currentNewOrder), CurrentOrder: currentNewOrder, Id: elevatorId}
 				}
 				fmt.Printf("get through here\n")
-				orderSelection(assignedNewOrder, costs, nElevators, e.Id)
+				orderSelection(assignedNewOrder, costs, numElevators, e.Id)
 
 			}
 		case newStates := <-receivedStates:
@@ -53,7 +53,7 @@ func ArbitratorInit(
 func orderSelection(
 	assignedNewOrder chan<- def.Order,
 	costList map[string]def.Cost,
-	nElevators int,
+	numElevators int,
 	localIP string) {
 	lowestCost := findLowestCost(costList)
 	fmt.Printf("Lowest cost calculated\n")

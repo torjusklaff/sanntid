@@ -23,7 +23,7 @@ const (
 // Setter opp alle channels og funksjoner i en felles initialisering
 func NetworkInit(
 	id string,
-	nElevators chan int,
+	numElevators chan int,
 	receiveNewOrder chan def.Order,
 	receiveRemoverOrder chan def.Order,
 	sendNewOrder chan def.Order,
@@ -33,7 +33,7 @@ func NetworkInit(
 	sendStates chan def.Elevator,
 	receivedStates chan def.Elevator) {
 
-	go PeerListener(id, nElevators)
+	go PeerListener(id, numElevators)
 	go SendMsg(id, sendNewOrder, sendRemoveOrder, sendGlobalQueue, sendStates)
 	go ReceiveMsg(id, receiveNewOrder, receiveRemoverOrder, receivedGlobalQueue, receivedStates)
 }
@@ -52,7 +52,7 @@ func GetId() string {
 }
 
 // Setter opp en peer-listener som sjekker etter updates på levende heiser
-func PeerListener(id string, nElevators chan int) {
+func PeerListener(id string, numElevators chan int) {
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
 	go peers.Transmitter(peerPort, id, peerTxEnable)
@@ -64,7 +64,7 @@ func PeerListener(id string, nElevators chan int) {
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
-			nElevators <- len(p.Peers)
+			numElevators <- len(p.Peers)
 			fmt.Printf("Number of active peers: %v \n", len(p.Peers))
 		}
 	}

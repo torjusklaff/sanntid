@@ -8,7 +8,7 @@ import (
 const (
 	NFloors    = 4
 	NButtons   = 3
-	NElevators = 3
+	numElevators = 3
 )
 
 type MotorDirection int

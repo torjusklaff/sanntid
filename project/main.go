@@ -22,27 +22,17 @@ func main() {
 
 	sendStatesTicker := time.NewTicker(100*time.Millisecond)
 
-	var elevator def.Elevator
-	if _, err := os.Stat("log.txt"); err == nil {
-		elevator = driver.ElevInitFromBackup()
-		var dummyOrder def.Order
-		dummyOrder.Floor = 1
-		dummyOrder.Type = def.ButtoncallInternal
-		fsm.FsmNextOrder(&elevator, dummyOrder)
-	} else {
-		elevator = driver.ElevInit()
-	}
+	elevator := driver.ElevInit()
+	var dummyOrder def.Order
+	dummyOrder.Floor = 1
+	dummyOrder.Type = def.ButtoncallInternal
+	fsm.FsmNextOrder(&elevator, dummyOrder)
 
 	fmt.Printf("%v\n", driver.GetFloorSensorSignal())
 
-	var previousOrder def.Order
-	previousOrder.Type = def.ButtoncallInternal
-	previousOrder.Floor = elevator.LastFloor
 
 	// 	CHANNELS
-	nElevators := make(chan int)
-
-	//errorHandling := make(chan string)
+	numElevators := make(chan int)
 
 	receiveNewOrder := make(chan def.Order)
 	receiveRemoveOrder := make(chan def.Order)
@@ -54,13 +44,14 @@ func main() {
 	assignedNewOrder := make(chan def.Order)
 	sendGlobalQueue := make(chan [4][2]int)
 	sendStates := make(chan def.Elevator)
+
 	onFloor := pollFloors()
 	errorHandling := make(chan string)
 
 	elevator.Id = net.GetId()
 
-	go net.NetworkInit(elevator.Id, nElevators, receiveNewOrder, receiveRemoveOrder, sendNewOrder, sendRemoveOrder, sendGlobalQueue, receivedGlobalQueue, sendStates, receivedStates)
-	go arb.ArbitratorInit(elevator, receiveNewOrder, assignedNewOrder,receivedStates, nElevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
+	go net.NetworkInit(elevator.Id, numElevators, receiveNewOrder, receiveRemoveOrder, sendNewOrder, sendRemoveOrder, sendGlobalQueue, receivedGlobalQueue, sendStates, receivedStates)
+	go arb.ArbitratorInit(elevator, receiveNewOrder, assignedNewOrder,receivedStates, numElevators) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
 
 	go driver.CheckAllButtons(sendNewOrder, assignedNewOrder)
 	//go driver.ElevatorOnFloor(onFloor, elevator)
@@ -123,6 +114,7 @@ func main() {
 		}
 	}
 }
+
 
 func SafeKill() {
 	var c = make(chan os.Signal)
