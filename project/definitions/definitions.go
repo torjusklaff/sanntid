@@ -8,7 +8,7 @@ import (
 const (
 	NFloors    = 4
 	NButtons   = 3
-	numElevators = 3
+	NumElevators = 3
 )
 
 type MotorDirection int
@@ -79,17 +79,17 @@ type Cost struct {
 }
 
 type Channels struct {
-	numElevators chan int
-	receiveNewOrder chan def.Order
-	receiveRemoveOrder chan def.Order
-	receivedGlobalQueue chan [4][2]int
-	receivedStates chan def.Elevator
-	sendNewOrder chan def.Order
-	sendRemoveOrder chan def.Order
-	assignedNewOrder chan def.Order
-	sendGlobalQueue chan [4][2]int
-	sendStates chan def.Elevator
-	errorHandling chan string
+	NumElevators chan int
+	ReceiveNewOrder chan def.Order
+	ReceiveRemoveOrder chan def.Order
+	ReceivedGlobalQueue chan [4][2]int
+	ReceivedStates chan def.Elevator
+	SendNewOrder chan def.Order
+	SendRemoveOrder chan def.Order
+	SendGlobalQueue chan [4][2]int
+	AssignedNewOrder chan def.Order
+	SendStates chan def.Elevator
+	ErrorHandling chan string
 }
 
 var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main.go")

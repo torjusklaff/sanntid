@@ -43,9 +43,9 @@ func ButtonChecker(ch def.Channels) {
 					pressedButton.Type = def.ButtonType(button)
 					pressedButton.Floor = floor
 					if pressedButton.Type == def.ButtoncallInternal {
-						ch.assignedNewOrder <- pressedButton
+						ch.AssignedNewOrder <- pressedButton
 					} else {
-						ch.sendNewOrder <- pressedButton
+						ch.SendNewOrder <- pressedButton
 					}
 					time.Sleep(50*time.Millisecond)
 				}

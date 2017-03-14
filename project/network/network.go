@@ -34,11 +34,11 @@ func NetworkInit(elevator *def.Elevator, ch def.Channels) {
 				fmt.Println(err)
 				localIP = "DISCONNECTED"
 				elevator.ElevatorState = def.NotConnected
-				ch.errorHandling <- "DISCONNECTED"
+				ch.ErrorHandling <- "DISCONNECTED"
 			}
 			if (err == nil) && (elevator.ElevatorState == def.NotConnected){
 				elevator.ElevatorState == def.Idle
-				ch.errorHandling <- "CONNECTED"
+				ch.ErrorHandling <- "CONNECTED"
 			}
 			id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 		}
@@ -46,13 +46,13 @@ func NetworkInit(elevator *def.Elevator, ch def.Channels) {
 
 	elevator.Id = id
 
-	go PeerListener(id, ch.numElevators)
-	go SendMsg(id, ch.sendNewOrder, ch.sendRemoveOrder, ch.sendGlobalQueue, ch.sendStates)
-	go ReceiveMsg(id, ch.receiveNewOrder, ch.receiveRemoverOrder, ch.receivedGlobalQueue, ch.receivedStates)
+	go PeerListener(id, ch.NumElevators)
+	go SendMsg(id, ch.SendNewOrder, ch.SendRemoveOrder, ch.SendGlobalQueue, ch.SendStates)
+	go ReceiveMsg(id, ch.ReceiveNewOrder, ch.receiveRemoverOrder, ch.ReceivedGlobalQueue, ch.ReceivedStates)
 }
 
 
-func PeerListener(id string, numElevators chan int) {
+func PeerListener(id string, NumElevators chan int) {
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
 	go peers.Transmitter(peerPort, id, peerTxEnable)
@@ -64,7 +64,7 @@ func PeerListener(id string, numElevators chan int) {
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
-			numElevators <- len(p.Peers)
+			NumElevators <- len(p.Peers)
 			fmt.Printf("Number of active peers: %v \n", len(p.Peers))
 		}
 	}
@@ -72,10 +72,10 @@ func PeerListener(id string, numElevators chan int) {
 
 func SendMsg(
 	localIP string,
-	sendNewOrder chan def.Order,
-	sendRemoveOrder chan def.Order,
-	sendGlobalQueue chan [4][2]int,
-	sendStates chan def.Elevator) {
+	SendNewOrder chan def.Order,
+	SendRemoveOrder chan def.Order,
+	SendGlobalQueue chan [4][2]int,
+	SendStates chan def.Elevator) {
 
 
 	bcastSendNewOrder := make(chan def.Order)
@@ -90,16 +90,16 @@ func SendMsg(
 	
 	for {
 		select {
-		case msg := <-sendNewOrder:
+		case msg := <-SendNewOrder:
 			sending := msg
 			bcastSendNewOrder <- sending
-		case msg := <-sendRemoveOrder:
+		case msg := <-SendRemoveOrder:
 			sending := msg
 			bcastSendRemoveOrder <- sending
-		case msg := <-sendGlobalQueue:
+		case msg := <-SendGlobalQueue:
 			sending := msg
 			bcastSendGlobalQueue <- sending
-		case msg := <-sendStates:
+		case msg := <-SendStates:
 			sending := msg
 			bcastSendStates <- sending
 		default:
@@ -109,10 +109,10 @@ func SendMsg(
 
 func ReceiveMsg(
 	LocalIP string,
-	receiveNewOrder chan def.Order,
+	ReceiveNewOrder chan def.Order,
 	receiveRemoverOrder chan def.Order,
-	receivedGlobalQueue chan [4][2]int,
-	receivedStates chan def.Elevator) {
+	ReceivedGlobalQueue chan [4][2]int,
+	ReceivedStates chan def.Elevator) {
 
 
 	bcastReceiveNewOrder := make(chan def.Order)
@@ -128,14 +128,14 @@ func ReceiveMsg(
 	for {
 		select {
 		case msg := <-bcastReceiveNewOrder:
-			receiveNewOrder <- msg
+			ReceiveNewOrder <- msg
 		case msg := <-bcastReceiveRemoveOrder:
 			receiveRemoverOrder <- msg
 		case msg := <-bcastReceiveGlobalQueue:
-			receivedGlobalQueue <- msg
+			ReceivedGlobalQueue <- msg
 		case msg := <-bcastReceiveStates:
 			if msg.Id != LocalIP{
-			receivedStates <- msg
+			ReceivedStates <- msg
 			}
 		}
 	}

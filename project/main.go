@@ -21,23 +21,22 @@ func main() {
 	elevator := driver.ElevatorInit()
 
 	channels := def.Channels{
-		numElevators: make(chan int)
-		receiveNewOrder: make(chan def.Order)
-		receiveRemoveOrder: make(chan def.Order)
-		receivedGlobalQueue: make(chan [4][2]int)
-		receivedStates: make(chan def.Elevator, 10)
-		sendNewOrder: make(chan def.Order)
-		sendRemoveOrder: make(chan def.Order)
-		assignedNewOrder: make(chan def.Order)
-		sendGlobalQueue: make(chan [4][2]int)
-		sendStates: make(chan def.Elevator)
-		errorHandling: make(chan string)
+		NumElevators: make(chan int)
+		ReceiveNewOrder: make(chan def.Order)
+		ReceiveRemoveOrder: make(chan def.Order)
+		ReceivedGlobalQueue: make(chan [4][2]int)
+		ReceivedStates: make(chan def.Elevator, 10)
+		SendNewOrder: make(chan def.Order)
+		SendRemoveOrder: make(chan def.Order)
+		SendGlobalQueue: make(chan [4][2]int)
+		AssignedNewOrder: make(chan def.Order)
+		SendStates: make(chan def.Elevator)
+		ErrorHandling: make(chan string)
 	}
 
 	go net.NetworkInit(&elevator, channels)
 	go arb.ArbitratorInit(elevator, channels)
-	go driver.CheckAllButtons(channels)
-
+	go driver.ButtonChecker(channels)
 	go fsm.EventHandler(&elevator, channels)
 
 }
