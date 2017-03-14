@@ -5,7 +5,7 @@ import (
 	def "./definitions"
 	net "./network"
 	"./fsm"
-	"./driver"
+	"./drivers"
 )
 
 func main() {
