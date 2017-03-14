@@ -125,9 +125,7 @@ func main() {
 			}*/
 		case <- send_states_ticker.C:
 			send_states <- elevator
-		/* case <- elevatorDisconnected:
-			... noe heisen må gjøre om den disconnecter fra nettet
-		*/
+	
 		default:
 			break
 		}

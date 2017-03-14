@@ -107,6 +107,7 @@ func SendMsg(
 	send_remove_order chan def.Order,
 	send_global_queue chan [4][2]int,
 	send_states chan def.Elevator) {
+	
 	bcast_send_new_order := make(chan def.Order)
 	bcast_send_remove_order := make(chan def.Order)
 	bcast_send_global_queue := make(chan [4][2]int)
