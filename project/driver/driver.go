@@ -25,11 +25,11 @@ func SetDoorOpenLamp(value int) {
 	C.elevSetDoorOpenLamp(C.int(value))
 }
 
-func GetButtonSignal(button def.Order) int {
-	return int(C.elevGetButtonSignal(C.elevButtonTypeT(button.Type), C.int(button.Floor)))
+func ButtonSignal(button def.Order) int {
+	return int(C.elevButtonSignal(C.elevButtonTypeT(button.Type), C.int(button.Floor)))
 }
 
-func GetFloorSensorSignal() int {
-	return int(C.elevGetFloorSensorSignal())
+func FloorSensorSignal() int {
+	return int(C.elevFloorSensorSignal())
 }
 

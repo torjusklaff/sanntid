@@ -44,7 +44,6 @@ func main() {
 	assignedNewOrder := make(chan def.Order)
 	sendGlobalQueue := make(chan [4][2]int)
 	sendStates := make(chan def.Elevator)
-
 	onFloor := pollFloors()
 	errorHandling := make(chan string)
 
@@ -114,7 +113,6 @@ func main() {
 		}
 	}
 }
-
 
 func SafeKill() {
 	var c = make(chan os.Signal)
