@@ -25,15 +25,15 @@ func ToBackup(str string) {
 	log.Println(str)
 }
 
-func ReadLastLine(string_size int64) string {
-	string_size += 1
+func ReadLastLine(stringSize int64) string {
+	stringSize += 1
 	f, err := os.Open(filename)
 	checkError(err)
 	defer f.Close()
 
-	buf := make([]byte, string_size)
+	buf := make([]byte, stringSize)
 	stat, err := os.Stat(filename)
-	start := stat.Size() - string_size
+	start := stat.Size() - stringSize
 	n, err := f.ReadAt(buf, start)
 	checkError(err)
 	buf = buf[:n]
@@ -41,36 +41,36 @@ func ReadLastLine(string_size int64) string {
 }
 
 func BackupInternalQueue(elevator def.Elevator) {
-	queue_string := QueueToString(elevator)
-	ToBackup(queue_string)
+	queueString := QueueToString(elevator)
+	ToBackup(queueString)
 }
 
 func QueueToString(e def.Elevator) string {
-	var queue_string string
-	var order_string string
-	for f := 0; f < def.N_floors; f++ {
-		for btn := 0; btn < def.N_buttons; btn++ {
+	var queueString string
+	var orderString string
+	for f := 0; f < def.NumFloors; f++ {
+		for btn := 0; btn < def.NumButtons; btn++ {
 			if e.Queue[f][btn] == 1 {
-				order_string = "1 "
+				orderString = "1 "
 			} else {
-				order_string = "0 "
+				orderString = "0 "
 			}
-			queue_string += order_string
+			queueString += orderString
 		}
 	}
-	return queue_string
+	return queueString
 }
 
-func QueueFromString(queue_string string) [4][3]int {
+func QueueFromString(queueString string) [4][3]int {
 	queue := [4][3]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
 	index := 0
 
-	queue_temp := strings.Fields(queue_string)
+	queueTemp := strings.Fields(queueString)
 
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 3; j++ {
-			new_queue, _ := strconv.Atoi(queue_temp[index])
-			queue[i][j] = new_queue
+			newQueue, _ := strconv.Atoi(queueTemp[index])
+			queue[i][j] = newQueue
 			index += 1
 		}
 	}
