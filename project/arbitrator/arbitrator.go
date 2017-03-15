@@ -4,6 +4,7 @@ import (
 	def "../definitions"
 	"math"
 	"strings"
+	"time"
 )
 
 var maxDistance int = def.NumFloors * def.NumButtons
@@ -11,7 +12,7 @@ var maxDistance int = def.NumFloors * def.NumButtons
 func ArbitratorInit(e def.Elevator, ch def.Channels) {
 	SendStatesTicker := time.NewTicker(100 * time.Millisecond)
 	numberOfConnectedElevators := 1
-	elevStates := map[string]def.Elevator{}
+	elevStates := map[string]def.ElevatorMsg{}
 	costs := make(map[string]def.Cost)
 
 	for {
@@ -25,19 +26,19 @@ func ArbitratorInit(e def.Elevator, ch def.Channels) {
 				for elevatorId := range elevStates {
 					costs[elevatorId] = def.Cost{Cost: costFunction(elevStates[elevatorId], currentNewOrder), CurrentOrder: currentNewOrder, Id: elevatorId}
 				}
-				orderSelection(AssignedNewOrder, costs, e.Id)
+				orderSelection(ch.AssignedNewOrder, costs, e.Id)
 
 			}
-		case newStates := <-ReceivedStates:
+		case newStates := <-ch.ReceivedStates:
 			elevStates[newStates.Id] = newStates
 		case <-SendStatesTicker.C:
 			stateMsg := def.ElevatorMsg{
 				LastFloor:        e.LastFloor,
 				CurrentDirection: e.CurrentDirection,
-				Elevator_state:   e.Elevator_state,
+				ElevatorState:    e.ElevatorState,
 				Id:               e.Id}
 			elevStates[e.Id] = stateMsg
-			sendStates <- stateMsg
+			ch.SendStates <- stateMsg
 
 		}
 	}

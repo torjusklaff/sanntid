@@ -4,11 +4,10 @@ import (
 	def "../definitions"
 	"../driver"
 	"../queue"
-	"time"
 )
 
 func EventHandler(elevator *def.Elevator, ch def.Channels) {
-	allExternalOrders := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
+	globalQueue := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 
 	onFloor := pollFloors()
 	go SafeKill(ch.ErrorHandling)
@@ -16,21 +15,24 @@ func EventHandler(elevator *def.Elevator, ch def.Channels) {
 	for {
 		select {
 		case floor := <-onFloor:
-			FsmFloorArrival(floor, elevator, allExternalOrders, ch.SendGlobalQueue)
+			FsmFloorArrival(floor, elevator, ch.SendFloorOrderCompleted)
 
 		case <-elevator.DoorTimer.C:
 			FsmOnDoorTimeout(elevator)
 
+		case floorToDelete := <-ch.ReceivedFloorOrderCompleted:
+			queue.DeleteGlobalOrdersAtFloor(&globalQueue, floorToDelete)
+			driver.ClearExternalButtonLampsAtFloor(floorToDelete)
+
 		case newOrder := <-ch.ReceiveNewOrder:
-			queue.AddOrderToGlobalQueue(ch.SendGlobalQueue, allExternalOrders, newOrder)
+			queue.UpdateGlobalQueue(&globalQueue, newOrder)
+			driver.SetButtonLamp(newOrder, 1)
 
 		case newOrder := <-ch.AssignedNewOrder:
 			if elevator.Queue[newOrder.Floor][int(newOrder.Type)] == 0 {
 				queue.Enqueue(elevator, newOrder)
 				FsmNextOrder(elevator, newOrder)
 			}
-		case globalQueue := <-ch.ReceivedGlobalQueue:
-			allExternalOrders = globalQueue
 
 		case <-elevator.MotorStopTimer.C:
 			errorMessage := "MOTORSTOP"
@@ -39,7 +41,7 @@ func EventHandler(elevator *def.Elevator, ch def.Channels) {
 
 		case err := <-ch.ErrorHandling:
 			if err == "MOTORSTOP" {
-				elevator = FsmMotorStop(elevator)
+				*elevator = FsmMotorStop(elevator)
 
 				var dummyOrder def.Order
 				dummyOrder.Floor = 1

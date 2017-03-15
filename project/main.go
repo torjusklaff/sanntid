@@ -3,32 +3,32 @@ package main
 import (
 	arb "./arbitrator"
 	def "./definitions"
-	net "./network"
+	"./driver"
 	"./fsm"
-	"./drivers"
+	net "./network"
 )
 
 func main() {
 	elevator := driver.ElevatorInit()
+	elevator.Id = net.GetId()
 
 	channels := def.Channels{
-		NumElevators: make(chan int),
-		ReceiveNewOrder: make(chan def.Order),
-		ReceiveRemoveOrder: make(chan def.Order),
-		ReceivedGlobalQueue: make(chan [4][2]int),
-		ReceivedStates: make(chan def.ElevatorMsg),
-		SendNewOrder: make(chan def.Order),
-		SendRemoveOrder: make(chan def.Order),
-		SendGlobalQueue: make(chan [4][2]int),
-		AssignedNewOrder: make(chan def.Order),
-		SendStates: make(chan def.ElevatorMsg),
-		ErrorHandling: make(chan string)
-	}
+		NumElevators:                make(chan int),
+		ReceiveNewOrder:             make(chan def.Order),
+		ReceivedFloorOrderCompleted: make(chan int),
+		SendStates:                  make(chan def.ElevatorMsg),
+		ReceivedStates:              make(chan def.ElevatorMsg),
+		SendNewOrder:                make(chan def.Order),
+		SendFloorOrderCompleted:     make(chan int),
+		AssignedNewOrder:            make(chan def.Order),
+		ErrorHandling:               make(chan string)}
 
 	go net.NetworkInit(&elevator, channels)
 	go arb.ArbitratorInit(elevator, channels)
 	go fsm.ButtonChecker(channels)
 	go fsm.EventHandler(&elevator, channels)
+	for {
+
+	}
 
 }
-

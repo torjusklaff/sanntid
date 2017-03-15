@@ -65,10 +65,10 @@ type Elevator struct {
 }
 
 type ElevatorMsg struct {
-	Last_floor        int
-	Current_direction Motor_direction
-	Elevator_state    Elev_states
-	Id                string
+	LastFloor        int
+	CurrentDirection MotorDirection
+	ElevatorState    ElevStates
+	Id               string
 }
 
 type Cost struct {
@@ -78,17 +78,15 @@ type Cost struct {
 }
 
 type Channels struct {
-	NumElevators        chan int
-	ReceiveNewOrder     chan def.Order
-	ReceiveRemoveOrder  chan def.Order
-	ReceivedGlobalQueue chan [4][2]int
-	ReceivedStates      chan def.Elevator
-	SendNewOrder        chan def.Order
-	SendRemoveOrder     chan def.Order
-	SendGlobalQueue     chan [4][2]int
-	AssignedNewOrder    chan def.Order
-	SendStates          chan def.Elevator
-	ErrorHandling       chan string
+	NumElevators                chan int
+	ReceiveNewOrder             chan Order
+	ReceivedFloorOrderCompleted chan int
+	ReceivedStates              chan ElevatorMsg
+	SendStates                  chan ElevatorMsg
+	SendNewOrder                chan Order
+	SendFloorOrderCompleted     chan int
+	AssignedNewOrder            chan Order
+	ErrorHandling               chan string
 }
 
 var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main.go")

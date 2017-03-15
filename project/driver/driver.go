@@ -1,39 +1,102 @@
 package driver
-/*
-#cgo CFLAGS: -std=c11
-#cgo LDFLAGS: -lcomedi -lm
-#include "elev.h"
-*/
+
 import (
-	"C"
+	"../backup"
 	def "../definitions"
+	"os"
+	"time"
 )
 
-func SetMotorDirection(dirn def.MotorDirection) {
-	C.elev_set_motor_direction(C.elev_motor_direction_t(dirn))
+func SetButtonLampFromInternalQueue(queue [4][3]int) {
+	for f := 0; f < def.NumFloors; f++ {
+		for btn := 0; btn < def.NumButtons; btn++ {
+
+			var button def.Order
+			button.Floor = f
+			button.Type = def.ButtonType(btn)
+
+			SetButtonLamp(button, queue[f][btn])
+		}
+	}
 }
 
-func SetButtonLamp(button def.Order, value int) {
-	C.elev_set_button_lamp(C.elev_button_type_t(button.Type), C.int(button.Floor), C.int(value))
+func SetButtonLampFromGlobalQueue(queue [4][2]int) {
+	for f := 0; f < def.NumFloors; f++ {
+		for btn := 0; btn < 2; btn++ {
+
+			var button def.Order
+			button.Floor = f
+			button.Type = def.ButtonType(btn)
+
+			SetButtonLamp(button, queue[f][btn])
+		}
+	}
 }
 
-func SetFloorIndicator(floor int) {
-	C.elev_set_floor_indicator(C.int(floor))
+func ElevatorOnFloor(onFloor chan int, elevator def.Elevator) {
+	for {
+		if (FloorSensorSignal() != elevator.LastFloor) && (FloorSensorSignal() != -1) {
+
+			onFloor <- FloorSensorSignal()
+		}
+	}
 }
 
-func SetDoorOpenLamp(value int) {
-	C.elev_set_door_open_lamp(C.int(value))
+func ClearLightsAtFloor(floor int) {
+	for btn := 0; btn < def.NumButtons; btn++ {
+		var button def.Order
+		button.Type = def.ButtonType(btn)
+		button.Floor = floor
+		SetButtonLamp(button, 0)
+	}
 }
 
-func ButtonSignal(button def.Order) int {
-	return int(C.elev_get_button_signal(C.elev_button_type_t(button.Type), C.int(button.Floor)))
+func ClearExternalButtonLampsAtFloor(floor int) {
+	for btn := 0; btn < def.NumButtons; btn++ {
+		var button def.Order
+		button.Floor = floor
+		button.Type = def.ButtonType(btn)
+
+		SetButtonLamp(button, 0)
+	}
 }
 
-func FloorSensorSignal() int {
-	return int(C.elev_get_floor_sensor_signal())
-}
+func ElevatorInit() def.Elevator {
+	SetMotorDirection(def.DirStop)
+	HwInit()
+	SetMotorDirection(def.DirDown)
 
-func StopButton(value int){
-	C.elev_set_stop_lamp(value)
-}
+	for FloorSensorSignal() == -1 {
+	}
 
+	SetMotorDirection(def.DirStop)
+	SetFloorIndicator(FloorSensorSignal())
+
+	doorTimer := time.NewTimer(3 * time.Second)
+	doorTimer.Stop()
+	motorStopTimer := time.NewTimer(10 * time.Second)
+	motorStopTimer.Stop()
+
+	elev := def.Elevator{
+		LastFloor:        FloorSensorSignal(),
+		CurrentDirection: def.DirStop,
+		Queue:            [4][3]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+		ElevatorState:    def.Idle,
+		DoorTimer:        doorTimer,
+		MotorStopTimer:   motorStopTimer}
+
+	if _, err := os.Stat("log.txt"); err == nil {
+		lastQueue := backup.ReadLastLine(24)
+		elev.Queue = backup.QueueFromString(lastQueue)
+		for floor := 0; floor < def.NumFloors; floor++ {
+			for button := 0; button < def.NumButtons; button++ {
+				if elev.Queue[floor][button] == 1 {
+					setButton := def.Order{Type: def.ButtonType(button), Floor: floor}
+					SetButtonLamp(setButton, 1)
+				}
+			}
+		}
+	}
+
+	return elev
+}

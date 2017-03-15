@@ -17,7 +17,7 @@ func checkError(err error) {
 }
 
 func ToBackup(str string) {
-	f, err := os.OpenFile("log.txt", os.ORDWR|os.OCREATE|os.OAPPEND, 0666)
+	f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	checkError(err)
 	defer f.Close()
 

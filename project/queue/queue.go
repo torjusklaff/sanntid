@@ -1,8 +1,8 @@
 package queue
 
 import (
-	def "../definitions"
 	"../backup"
+	def "../definitions"
 )
 
 func requestsAbove(e def.Elevator) bool {
@@ -25,6 +25,15 @@ func requestsBelow(e def.Elevator) bool {
 		}
 	}
 	return false
+}
+
+func UpdateGlobalQueue(globalQueue *[4][2]int, order def.Order) {
+	globalQueue[order.Floor][int(order.Type)] = 1
+}
+func DeleteGlobalOrdersAtFloor(globalQueue *[4][2]int, floor int) {
+	for i := 0; i < def.NumButtons-1; i++ {
+		globalQueue[floor][i] = 0
+	}
 }
 
 func ChooseDirection(e def.Elevator) def.MotorDirection {
@@ -59,7 +68,7 @@ func ChooseDirection(e def.Elevator) def.MotorDirection {
 	return def.DirStop
 }
 
-func DeleteInternalQueuesAtFloor(e *def.Elevator, floor int) {
+func DeleteInternalQueueAtFloor(e *def.Elevator, floor int) {
 	for btn := 0; btn < def.NumButtons; btn++ {
 		if e.Queue[floor][btn] == 1 {
 			e.Queue[floor][btn] = 0
@@ -67,16 +76,6 @@ func DeleteInternalQueuesAtFloor(e *def.Elevator, floor int) {
 		}
 	}
 }
-
-func DeleteGlobalQueuesAtFloor(SendGlobalQueue chan [4][2]int, oldQueue [4][2]int, floor int) {
-	for btn := 0; btn < 2; btn++ {
-		if oldQueue[floor][btn] == 1 {
-			oldQueue[floor][btn] = 0
-		}
-	}
-	SendGlobalQueue <- oldQueue
-}
-
 
 func ShouldStop(e def.Elevator) bool {
 	switch e.CurrentDirection {
@@ -95,13 +94,3 @@ func Enqueue(e *def.Elevator, order def.Order) {
 	e.Queue[order.Floor][order.Type] = 1
 	backup.BackupInternalQueue(*e)
 }
-
-func AddOrderToGlobalQueue(globalQueueChan chan [4][2]int, oldQueue [4][2]int, newOrder def.Order) {
-	if newOrder.Type == def.ButtoncallInternal {
-		globalQueueChan <- oldQueue
-	} else {
-		oldQueue[newOrder.Floor][int(newOrder.Type)] = 1
-		globalQueueChan <- oldQueue
-	}
-}
-

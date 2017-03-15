@@ -12,41 +12,31 @@ import (
 )
 
 const (
-	peerPort        = 20100
-	sendOrderPort   = 20012
-	removeOrderPort = 16572
-	statesPort      = 16573
-	globalQueuePort = 16574
-	broadcastTime   = 1 * time.Second
+	peerPort                = 20100
+	sendOrderPort           = 20012
+	removeOrderPort         = 16572
+	statesPort              = 16573
+	globalCompleteOrderPort = 16574
+	broadcastTime           = 1 * time.Second
 )
 
 func NetworkInit(elevator *def.Elevator, ch def.Channels) {
+	go PeerListener(elevator.Id, ch.NumElevators)
+	go SendMsg(elevator.Id, ch.SendNewOrder, ch.SendFloorOrderCompleted, ch.SendStates)
+	go ReceiveMsg(elevator.Id, ch.ReceiveNewOrder, ch.ReceivedFloorOrderCompleted, ch.ReceivedStates)
+}
 
+func GetId() string {
 	var id string
-	go func() {
-		for {
-			flag.StringVar(&id, "id", "", "id of this peer")
-			flag.Parse()
-			localIP, err := localip.LocalIP()
-			if err != nil {
-				fmt.Println(err)
-				localIP = "DISCONNECTED"
-				elevator.ElevatorState = def.NotConnected
-				ch.ErrorHandling <- "DISCONNECTED"
-			}
-			if (err == nil) && (elevator.ElevatorState == def.NotConnected) {
-				elevator.ElevatorState == def.Idle
-				ch.ErrorHandling <- "CONNECTED"
-			}
-			id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
-		}
-	}()
-
-	elevator.Id = id
-
-	go PeerListener(id, ch.NumElevators)
-	go SendMsg(id, ch.SendNewOrder, ch.SendRemoveOrder, ch.SendGlobalQueue, ch.SendStates)
-	go ReceiveMsg(id, ch.ReceiveNewOrder, ch.receiveRemoverOrder, ch.ReceivedGlobalQueue, ch.ReceivedStates)
+	flag.StringVar(&id, "id", "", "id of this peer")
+	flag.Parse()
+	localIP, err := localip.LocalIP()
+	if err != nil {
+		fmt.Println(err)
+		localIP = "DISCONNECTED"
+	}
+	id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
+	return id
 }
 
 func PeerListener(id string, NumElevators chan int) {
@@ -70,18 +60,15 @@ func PeerListener(id string, NumElevators chan int) {
 func SendMsg(
 	localIP string,
 	SendNewOrder chan def.Order,
-	SendRemoveOrder chan def.Order,
-	SendGlobalQueue chan [4][2]int,
+	SendFloorOrderCompleted chan int,
 	SendStates chan def.ElevatorMsg) {
 
 	bcastSendNewOrder := make(chan def.Order)
-	bcastSendRemoveOrder := make(chan def.Order)
-	bcastSendGlobalQueue := make(chan [4][2]int)
+	bcastSendFloorOrderCompleted := make(chan int)
 	bcastSendStates := make(chan def.ElevatorMsg)
 
 	go bcast.Transmitter(sendOrderPort, bcastSendNewOrder)
-	go bcast.Transmitter(removeOrderPort, bcastSendRemoveOrder)
-	go bcast.Transmitter(globalQueuePort, bcastSendGlobalQueue)
+	go bcast.Transmitter(globalCompleteOrderPort, bcastSendFloorOrderCompleted)
 	go bcast.Transmitter(statesPort, bcastSendStates)
 
 	for {
@@ -89,12 +76,9 @@ func SendMsg(
 		case msg := <-SendNewOrder:
 			sending := msg
 			bcastSendNewOrder <- sending
-		case msg := <-SendRemoveOrder:
+		case msg := <-SendFloorOrderCompleted:
 			sending := msg
-			bcastSendRemoveOrder <- sending
-		case msg := <-SendGlobalQueue:
-			sending := msg
-			bcastSendGlobalQueue <- sending
+			bcastSendFloorOrderCompleted <- sending
 		case msg := <-SendStates:
 			sending := msg
 			bcastSendStates <- sending
@@ -106,28 +90,23 @@ func SendMsg(
 func ReceiveMsg(
 	LocalIP string,
 	ReceiveNewOrder chan def.Order,
-	receiveRemoverOrder chan def.Order,
-	ReceivedGlobalQueue chan [4][2]int,
+	ReceivedFloorOrderCompleted chan int,
 	ReceivedStates chan def.ElevatorMsg) {
 
 	bcastReceiveNewOrder := make(chan def.Order)
-	bcastReceiveRemoveOrder := make(chan def.Order)
-	bcastReceiveGlobalQueue := make(chan [4][2]int)
+	bcastReceivedFloorOrderCompleted := make(chan int)
 	bcastReceiveStates := make(chan def.ElevatorMsg)
 
 	go bcast.Receiver(sendOrderPort, bcastReceiveNewOrder)
-	go bcast.Receiver(removeOrderPort, bcastReceiveRemoveOrder)
-	go bcast.Receiver(globalQueuePort, bcastReceiveGlobalQueue)
+	go bcast.Receiver(globalCompleteOrderPort, bcastReceivedFloorOrderCompleted)
 	go bcast.Receiver(statesPort, bcastReceiveStates)
 
 	for {
 		select {
 		case msg := <-bcastReceiveNewOrder:
 			ReceiveNewOrder <- msg
-		case msg := <-bcastReceiveRemoveOrder:
-			receiveRemoverOrder <- msg
-		case msg := <-bcastReceiveGlobalQueue:
-			ReceivedGlobalQueue <- msg
+		case msg := <-bcastReceivedFloorOrderCompleted:
+			ReceivedFloorOrderCompleted <- msg
 		case msg := <-bcastReceiveStates:
 			if msg.Id != LocalIP {
 				ReceivedStates <- msg
