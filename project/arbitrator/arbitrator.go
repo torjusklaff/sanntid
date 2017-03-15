@@ -2,6 +2,7 @@ package arbitrator
 
 import (
 	def "../definitions"
+	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -22,6 +23,7 @@ func ArbitratorInit(e def.Elevator, ch def.Channels) {
 		case currentNewOrder := <-ch.ReceiveNewOrder:
 			if numberOfConnectedElevators == 1 {
 				ch.AssignedNewOrder <- currentNewOrder
+				fmt.Println("We are alone!\n")
 			} else {
 				for elevatorId := range elevStates {
 					costs[elevatorId] = def.Cost{Cost: costFunction(elevStates[elevatorId], currentNewOrder), CurrentOrder: currentNewOrder, Id: elevatorId}
@@ -64,6 +66,8 @@ func movementPenalty(state def.ElevStates, direction def.MotorDirection, differe
 	switch state {
 	case def.Idle:
 		return 0
+	case def.MotorStop:
+		return math.Inf(+1)
 	default:
 		switch direction {
 		case def.DirUp:

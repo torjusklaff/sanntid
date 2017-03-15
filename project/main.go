@@ -25,7 +25,6 @@ func main() {
 
 	go net.NetworkInit(&elevator, channels)
 	go arb.ArbitratorInit(elevator, channels)
-	go fsm.ButtonChecker(channels)
 	go fsm.EventHandler(&elevator, channels)
 	for {
 

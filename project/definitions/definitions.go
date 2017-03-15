@@ -6,8 +6,10 @@ import (
 )
 
 const (
-	NumFloors  = 4
-	NumButtons = 3
+	NumFloors        = 4
+	NumButtons       = 3
+	MotorStopTimeout = 4 * time.Second
+	DoorTimeout      = 2 * time.Second
 )
 
 type MotorDirection int
