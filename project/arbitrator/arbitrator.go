@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 )
 
 var max_distance int = def.N_floors * def.N_buttons
@@ -14,33 +15,44 @@ func ArbitratorInit(
 	e def.Elevator,
 	receive_new_order chan def.Order,
 	assigned_new_order chan def.Order,
-	//received_states chan def.Elevator,
 	number_of_connected_elevators chan int,
-	elev_states map[string]def.Elevator_msg) {
+	send_states chan def.Elevator_msg,
+	received_states chan def.Elevator_msg) {
+
+	send_states_ticker := time.NewTicker(100 * time.Millisecond)
+
+	elev_states := map[string]def.Elevator_msg{}
+
+	costs := make(map[string]def.Cost)
 
 	n_elevators := 1
-	costs := make(map[string]def.Cost)
 	for {
 		select {
 		case elevators := <-number_of_connected_elevators:
 			n_elevators = elevators
-			fmt.Printf("Number of elevators: %v \n", n_elevators)
 		case current_new_order := <-receive_new_order:
 			if n_elevators == 1 {
 				fmt.Printf("We are alone, we get the order!\n")
 				assigned_new_order <- current_new_order
 			} else {
-				/*
-					new_states := <-received_states
-					elev_states[e.Id]= e
-					elev_states[new_states.Id] = new_states
-				*/ //FORSLAG: fjerne disse linjene da de kan skape en sleep
 				for elevator_id, _ := range elev_states {
 					costs[elevator_id] = def.Cost{Cost: costFunction(elev_states[elevator_id], current_new_order), Current_order: current_new_order, Id: elevator_id}
 				}
 				orderSelection(assigned_new_order, costs, n_elevators, e.Id)
 
 			}
+
+		case new_states := <-received_states:
+			elev_states[new_states.Id] = new_states
+
+		case <-send_states_ticker.C:
+			state_msg := def.Elevator_msg{
+				Last_floor:        e.Last_floor,
+				Current_direction: e.Current_direction,
+				Elevator_state:    e.Elevator_state,
+				Id:                e.Id}
+			elev_states[e.Id] = state_msg
+			send_states <- state_msg
 		}
 	}
 }
@@ -69,9 +81,9 @@ func costFunction(e def.Elevator_msg, order def.Order) float64 {
 	return cost
 }
 
-func findLowestCost(costs map[string]def.Cost) def.Cost { //Problemet er inni her!!!!!!!!!!
+func findLowestCost(costs map[string]def.Cost) def.Cost {
 	dummy_order := def.Order{Type: 0, Floor: 0, Internal: false, Id: " "}
-	lowest_cost := def.Cost{Cost: math.Inf(+1), Current_order: dummy_order, Id: "i am stupid"}
+	lowest_cost := def.Cost{Cost: math.Inf(+1), Current_order: dummy_order, Id: " "}
 
 	for Id, cost := range costs {
 		if cost.Cost < lowest_cost.Cost {
@@ -82,7 +94,7 @@ func findLowestCost(costs map[string]def.Cost) def.Cost { //Problemet er inni he
 				lowest_cost = cost
 			}
 		}
-	} //Skjer i for løkka at det blir index out of range. FOr sliten til å fikse nå, se gjerne på det selv hvis du får to heiser
+	}
 	return lowest_cost
 }
 

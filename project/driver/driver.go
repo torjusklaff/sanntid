@@ -73,7 +73,7 @@ func CheckAllButtons(external_button_pressed chan def.Order, internal_button_pre
 					} else {
 						external_button_pressed <- pressed_button
 					}
-					time.Sleep(50*time.Millisecond)
+					time.Sleep(50 * time.Millisecond)
 				}
 			}
 		}
@@ -143,6 +143,14 @@ func ElevInitFromBackup() def.Elevator {
 	last_queue := backup.ReadLastLine(24)
 	fmt.Print(last_queue)
 	elev.Queue = backup.QueueFromString(last_queue)
+	for floor := 0; floor < def.N_floors; floor++ {
+		for button := 0; button < def.N_buttons; button++ {
+			if elev.Queue[floor][button] == 1 {
+				set_button := def.Order{Type: def.Button_type(button), Floor: floor}
+				SetButtonLamp(set_button, 1)
+			}
+		}
+	}
 	return elev
 }
 

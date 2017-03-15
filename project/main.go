@@ -20,8 +20,6 @@ import (
 func main() {
 	all_external_orders := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 
-	send_states_ticker := time.NewTicker(100 * time.Millisecond)
-
 	var elevator def.Elevator
 	if _, err := os.Stat("log.txt"); err == nil {
 		elevator = driver.ElevInitFromBackup()
@@ -33,16 +31,12 @@ func main() {
 		elevator = driver.ElevInit()
 	}
 
-	fmt.Printf("%v\n", driver.GetFloorSensorSignal())
-
 	var previous_order def.Order
 	previous_order.Type = def.Buttoncall_internal
 	previous_order.Floor = elevator.Last_floor
 
 	// 	CHANNELS
 	n_elevators := make(chan int)
-
-	//error_handling := make(chan string)
 
 	receive_new_order := make(chan def.Order)
 	receive_remove_order := make(chan def.Order)
@@ -56,16 +50,13 @@ func main() {
 	send_states := make(chan def.Elevator_msg, 100)
 	on_floor := pollFloors()
 	error_handling := make(chan string)
-	/*elevatorDisconnected := make(chan bool)*/
 
-	elev_states := map[string]def.Elevator_msg{}
 	elevator.Id = net.GetId()
 
-	go net.NetworkInit( /*&elevator, */ elevator.Id, n_elevators, receive_new_order, receive_remove_order, send_new_order, send_remove_order, send_global_queue, received_global_queue, send_states, received_states /*, elevatorDisconnected chan bool*/)
-	go arb.ArbitratorInit(elevator, receive_new_order, assigned_new_order, n_elevators, elev_states) // MÅ ENDRE ARBITRATOREN TIL Å OPPFØRE SEG ANNERLEDES
+	go net.NetworkInit(elevator.Id, n_elevators, receive_new_order, receive_remove_order, send_new_order, send_remove_order, send_global_queue, received_global_queue, send_states, received_states /*, elevatorDisconnected chan bool*/)
+	go arb.ArbitratorInit(elevator, receive_new_order, assigned_new_order, n_elevators, send_states, received_states)
 
 	go driver.CheckAllButtons(send_new_order, assigned_new_order)
-	//go driver.Elevator_on_floor(on_floor, elevator)
 
 	go SafeKill()
 
@@ -125,16 +116,6 @@ func main() {
 				driver.StopButton(0)
 			}*/
 
-		case new_states := <-received_states:
-			elev_states[new_states.Id] = new_states
-			/*for elevators, _ := range elev_states {
-				fmt.Printf("We have these Id's: %s \n", elevators)
-			}
-			fmt.Println("\n \n \n")*/
-		case <-send_states_ticker.C:
-			state_msg := def.Elevator_msg{Last_floor: elevator.Last_floor, Current_direction: elevator.Current_direction, Elevator_state: elevator.Elevator_state, Id: elevator.Id}
-			elev_states[elevator.Id] = state_msg
-			send_states <- state_msg
 		/* case <- elevatorDisconnected:
 		... noe heisen må gjøre om den disconnecter fra nettet
 		*/
