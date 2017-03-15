@@ -6,34 +6,35 @@ import (
 )
 
 const (
-	NumFloors  = 4
-	NumButtons = 3
+	N_floors    = 4
+	N_buttons   = 3
+	N_elevators = 3
 )
 
-type MotorDirection int
+type Motor_direction int
 
 const (
-	DirDown MotorDirection = -1
-	DirStop MotorDirection = 0
-	DirUp   MotorDirection = 1
+	Dir_down Motor_direction = -1
+	Dir_stop Motor_direction = 0
+	Dir_up   Motor_direction = 1
 )
 
-type ButtonType int
+type Button_type int
 
 const (
-	ButtoncallDown     ButtonType = 1
-	ButtoncallUp       ButtonType = 0
-	ButtoncallInternal ButtonType = 2
+	Buttoncall_down     Button_type = 1
+	Buttoncall_up       Button_type = 0
+	Buttoncall_internal Button_type = 2
 )
 
 type Order struct {
-	Type     ButtonType
+	Type     Button_type
 	Floor    int
 	Internal bool
 	Id       string
 }
 
-func OrderToString(order Order) string {
+func Order_to_string(order Order) string {
 	var intern string
 	if order.Internal == true {
 		intern = "true"
@@ -43,50 +44,37 @@ func OrderToString(order Order) string {
 	return "Type: " + string(order.Type) + "  Floor: " + string(order.Floor) + "  Internal: " + intern + "  Id: " + order.Id
 }
 
-type ElevStates int
+type Elev_states int
 
 const (
-	Idle ElevStates = iota
-	StopOnFloor
+	Idle          Elev_states = iota
+	Stop_on_floor             //Not really necessary, look into it (Change to On_floor)
 	Moving
-	MotorStop
-	NotConnected
+	Motor_stop
 )
 
 type Elevator struct {
-	LastFloor        int
-	CurrentDirection MotorDirection
-	Queue            [NumFloors][NumButtons]int
-	ElevatorState    ElevStates
-	Id               string
-	DoorTimer        *time.Timer
-	MotorStopTimer   *time.Timer
-	CurrentOrder     Order
+	Last_floor        int
+	Current_direction Motor_direction
+	Queue             [N_floors][N_buttons]int
+	Elevator_state    Elev_states
+	Id                string
+	Door_timer        *time.Timer
+	Motor_stop_timer  *time.Timer
+	Current_order     Order
 }
 
-type ElevatorMsg struct {
-	LastFloor        int
-	CurrentDirection MotorDirection
-	ElevatorState    ElevStates
-	Id               string
-}
+/*type Elevator_msg struct {
+	Last_floor        int
+	Current_direction Motor_direction
+	Elevator_state    Elev_states
+	Id                string
+}*/
 
 type Cost struct {
-	Cost         float64
-	CurrentOrder Order
-	Id           string
+	Cost          float64
+	Current_order Order
+	Id            string
 }
 
-type Channels struct {
-	NumElevators                chan int
-	ReceiveNewOrder             chan Order
-	ReceivedFloorOrderCompleted chan int
-	ReceivedStates              chan ElevatorMsg
-	SendStates                  chan ElevatorMsg
-	SendNewOrder                chan Order
-	SendFloorOrderCompleted     chan int
-	AssignedNewOrder            chan Order
-	ErrorHandling               chan string
-}
-
-var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main.go")
+var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main")
