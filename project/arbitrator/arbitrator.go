@@ -8,36 +8,40 @@ import (
 
 var maxDistance int = def.NumFloors * def.NumButtons
 
-
 func ArbitratorInit(e def.Elevator, ch def.Channels) {
-	
+	SendStatesTicker := time.NewTicker(100 * time.Millisecond)
 	numberOfConnectedElevators := 1
 	elevStates := map[string]def.Elevator{}
 	costs := make(map[string]def.Cost)
-	elevStates[e.Id] = e
 
 	for {
 		select {
 		case elevators := <-ch.NumElevators:
 			numberOfConnectedElevators = elevators
 		case currentNewOrder := <-ch.ReceiveNewOrder:
-			if (numberOfConnectedElevators == 1) {
+			if numberOfConnectedElevators == 1 {
 				ch.AssignedNewOrder <- currentNewOrder
 			} else {
-				for elevatorId := range elevStates{
+				for elevatorId := range elevStates {
 					costs[elevatorId] = def.Cost{Cost: costFunction(elevStates[elevatorId], currentNewOrder), CurrentOrder: currentNewOrder, Id: elevatorId}
 				}
 				orderSelection(AssignedNewOrder, costs, e.Id)
 
 			}
 		case newStates := <-ReceivedStates:
-			elevStates[e.Id]= e
 			elevStates[newStates.Id] = newStates
-			
+		case <-SendStatesTicker.C:
+			stateMsg := def.ElevatorMsg{
+				LastFloor:        e.LastFloor,
+				CurrentDirection: e.CurrentDirection,
+				Elevator_state:   e.Elevator_state,
+				Id:               e.Id}
+			elevStates[e.Id] = stateMsg
+			sendStates <- stateMsg
+
 		}
 	}
 }
-
 
 func orderSelection(
 	AssignedNewOrder chan<- def.Order,
@@ -49,7 +53,6 @@ func orderSelection(
 		AssignedNewOrder <- lowestCost.CurrentOrder
 	}
 }
-
 
 func splitIP(IP string) string {
 	s := strings.Split(IP, ".")
@@ -99,16 +102,16 @@ func orderDirectionPenalty(elevatorDirection def.MotorDirection, orderFloor int,
 	}
 }
 
-func costFunction(e def.Elevator, order def.Order) float64 {
+func costFunction(e def.ElevatorMsg, order def.Order) float64 {
 	diff := order.Floor - e.LastFloor
 	cost := math.Abs(float64(diff)) + movementPenalty(e.ElevatorState, e.CurrentDirection, diff) + turnPenalty(e.ElevatorState, e.LastFloor, e.CurrentDirection, order.Floor) + orderDirectionPenalty(e.CurrentDirection, order.Floor, order.Type)
 	return cost
 }
 
-
 func findLowestCost(costs map[string]def.Cost) def.Cost {
 	dummyOrder := def.Order{Type: 0, Floor: 0, Internal: false, Id: " "}
-	lowestCost:= def.Cost{Cost: math.Inf(+1), CurrentOrder: dummyOrder, Id: " "}
+	lowestCost := def.Cost{Cost: math.Inf(+1), CurrentOrder: dummyOrder, Id: " "}
+
 	for Id, cost := range costs {
 		if cost.Cost < lowestCost.Cost {
 			lowestCost = cost

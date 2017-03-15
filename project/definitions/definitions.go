@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	NumFloors    = 4
-	NumButtons   = 3
+	NumFloors  = 4
+	NumButtons = 3
 )
 
 type MotorDirection int
@@ -46,7 +46,7 @@ func OrderToString(order Order) string {
 type ElevStates int
 
 const (
-	Idle          ElevStates = iota
+	Idle ElevStates = iota
 	StopOnFloor
 	Moving
 	MotorStop
@@ -56,33 +56,39 @@ const (
 type Elevator struct {
 	LastFloor        int
 	CurrentDirection MotorDirection
-	Queue             [NumFloors][NumButtons]int
+	Queue            [NumFloors][NumButtons]int
 	ElevatorState    ElevStates
-	Id                string
+	Id               string
 	DoorTimer        *time.Timer
-	MotorStopTimer  *time.Timer
+	MotorStopTimer   *time.Timer
 	CurrentOrder     Order
 }
 
+type ElevatorMsg struct {
+	Last_floor        int
+	Current_direction Motor_direction
+	Elevator_state    Elev_states
+	Id                string
+}
 
 type Cost struct {
-	Cost          float64
+	Cost         float64
 	CurrentOrder Order
-	Id            string
+	Id           string
 }
 
 type Channels struct {
-	NumElevators chan int
-	ReceiveNewOrder chan def.Order
-	ReceiveRemoveOrder chan def.Order
+	NumElevators        chan int
+	ReceiveNewOrder     chan def.Order
+	ReceiveRemoveOrder  chan def.Order
 	ReceivedGlobalQueue chan [4][2]int
-	ReceivedStates chan def.Elevator
-	SendNewOrder chan def.Order
-	SendRemoveOrder chan def.Order
-	SendGlobalQueue chan [4][2]int
-	AssignedNewOrder chan def.Order
-	SendStates chan def.Elevator
-	ErrorHandling chan string
+	ReceivedStates      chan def.Elevator
+	SendNewOrder        chan def.Order
+	SendRemoveOrder     chan def.Order
+	SendGlobalQueue     chan [4][2]int
+	AssignedNewOrder    chan def.Order
+	SendStates          chan def.Elevator
+	ErrorHandling       chan string
 }
 
 var Restart = exec.Command("gnome-terminal", "-x", "sh", "-c", "main.go")

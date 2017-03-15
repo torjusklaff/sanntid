@@ -12,20 +12,19 @@ import (
 )
 
 const (
-	peerPort           = 20100
-	sendOrderPort      = 20012
-	removeOrderPort    = 16572
-	statesPort         = 16573
-	globalQueuePort    = 16574
-	broadcastTime      = 1 * time.Second
+	peerPort        = 20100
+	sendOrderPort   = 20012
+	removeOrderPort = 16572
+	statesPort      = 16573
+	globalQueuePort = 16574
+	broadcastTime   = 1 * time.Second
 )
-
 
 func NetworkInit(elevator *def.Elevator, ch def.Channels) {
 
 	var id string
-	go func(){
-		for{
+	go func() {
+		for {
 			flag.StringVar(&id, "id", "", "id of this peer")
 			flag.Parse()
 			localIP, err := localip.LocalIP()
@@ -35,7 +34,7 @@ func NetworkInit(elevator *def.Elevator, ch def.Channels) {
 				elevator.ElevatorState = def.NotConnected
 				ch.ErrorHandling <- "DISCONNECTED"
 			}
-			if (err == nil) && (elevator.ElevatorState == def.NotConnected){
+			if (err == nil) && (elevator.ElevatorState == def.NotConnected) {
 				elevator.ElevatorState == def.Idle
 				ch.ErrorHandling <- "CONNECTED"
 			}
@@ -49,7 +48,6 @@ func NetworkInit(elevator *def.Elevator, ch def.Channels) {
 	go SendMsg(id, ch.SendNewOrder, ch.SendRemoveOrder, ch.SendGlobalQueue, ch.SendStates)
 	go ReceiveMsg(id, ch.ReceiveNewOrder, ch.receiveRemoverOrder, ch.ReceivedGlobalQueue, ch.ReceivedStates)
 }
-
 
 func PeerListener(id string, NumElevators chan int) {
 	peerUpdateCh := make(chan peers.PeerUpdate)
@@ -74,19 +72,18 @@ func SendMsg(
 	SendNewOrder chan def.Order,
 	SendRemoveOrder chan def.Order,
 	SendGlobalQueue chan [4][2]int,
-	SendStates chan def.Elevator) {
-
+	SendStates chan def.ElevatorMsg) {
 
 	bcastSendNewOrder := make(chan def.Order)
 	bcastSendRemoveOrder := make(chan def.Order)
 	bcastSendGlobalQueue := make(chan [4][2]int)
-	bcastSendStates := make(chan def.Elevator)
+	bcastSendStates := make(chan def.ElevatorMsg)
 
 	go bcast.Transmitter(sendOrderPort, bcastSendNewOrder)
 	go bcast.Transmitter(removeOrderPort, bcastSendRemoveOrder)
 	go bcast.Transmitter(globalQueuePort, bcastSendGlobalQueue)
 	go bcast.Transmitter(statesPort, bcastSendStates)
-	
+
 	for {
 		select {
 		case msg := <-SendNewOrder:
@@ -111,13 +108,12 @@ func ReceiveMsg(
 	ReceiveNewOrder chan def.Order,
 	receiveRemoverOrder chan def.Order,
 	ReceivedGlobalQueue chan [4][2]int,
-	ReceivedStates chan def.Elevator) {
-
+	ReceivedStates chan def.ElevatorMsg) {
 
 	bcastReceiveNewOrder := make(chan def.Order)
 	bcastReceiveRemoveOrder := make(chan def.Order)
 	bcastReceiveGlobalQueue := make(chan [4][2]int)
-	bcastReceiveStates := make(chan def.Elevator)
+	bcastReceiveStates := make(chan def.ElevatorMsg)
 
 	go bcast.Receiver(sendOrderPort, bcastReceiveNewOrder)
 	go bcast.Receiver(removeOrderPort, bcastReceiveRemoveOrder)
@@ -133,8 +129,8 @@ func ReceiveMsg(
 		case msg := <-bcastReceiveGlobalQueue:
 			ReceivedGlobalQueue <- msg
 		case msg := <-bcastReceiveStates:
-			if msg.Id != LocalIP{
-			ReceivedStates <- msg
+			if msg.Id != LocalIP {
+				ReceivedStates <- msg
 			}
 		}
 	}

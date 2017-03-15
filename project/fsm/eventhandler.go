@@ -7,9 +7,8 @@ import (
 	"time"
 )
 
-func EventHandler(elevator *def.Elevator, ch def.Channels){
+func EventHandler(elevator *def.Elevator, ch def.Channels) {
 	allExternalOrders := [4][2]int{{0, 0}, {0, 0}, {0, 0}, {0, 0}}
-	SendStatesTicker := time.NewTicker(100*time.Millisecond)
 
 	onFloor := pollFloors()
 	go SafeKill(ch.ErrorHandling)
@@ -50,15 +49,13 @@ func EventHandler(elevator *def.Elevator, ch def.Channels){
 			if err == "PROGRAMCRASH" {
 				def.Restart.Run()
 			}
-			if err == "DISCONNECTED"{
+			if err == "DISCONNECTED" {
 				driver.StopButton(1)
 			}
-			if err == "CONNECTED"{
+			if err == "CONNECTED" {
 				driver.StopButton(0)
 			}
 
-		case <- SendStatesTicker.C:
-			SendStates <- elevator
 		default:
 			break
 		}

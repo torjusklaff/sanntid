@@ -78,7 +78,16 @@ func ElevatorInit() def.Elevator {
 	if _, err := os.Stat("log.txt"); err == nil {
 		lastQueue := backup.ReadLastLine(24)
 		elev.Queue = backup.QueueFromString(lastQueue)
+		for floor := 0; floor < def.NumFloors; floor++ {
+			for button := 0; button < def.NumButtons; button++ {
+				if elev.Queue[floor][button] == 1 {
+					setButton := def.Order{Type: def.ButtonType(button), Floor: floor}
+					SetButtonLamp(setButton, 1)
+				}
+			}
+		}
 	}
+	
 
 	return elev
 }

@@ -16,12 +16,12 @@ func main() {
 		ReceiveNewOrder: make(chan def.Order),
 		ReceiveRemoveOrder: make(chan def.Order),
 		ReceivedGlobalQueue: make(chan [4][2]int),
-		ReceivedStates: make(chan def.Elevator, 10),
+		ReceivedStates: make(chan def.ElevatorMsg),
 		SendNewOrder: make(chan def.Order),
 		SendRemoveOrder: make(chan def.Order),
 		SendGlobalQueue: make(chan [4][2]int),
 		AssignedNewOrder: make(chan def.Order),
-		SendStates: make(chan def.Elevator),
+		SendStates: make(chan def.ElevatorMsg),
 		ErrorHandling: make(chan string)
 	}
 
